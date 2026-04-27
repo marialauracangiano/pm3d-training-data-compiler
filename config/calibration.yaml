@@ -1,0 +1,19 @@
+# config/calibration.yaml
+
+merge_keys:
+  - current_year
+  - affiliation
+  - timing
+  - plot_id
+
+output:
+  filename: calibration_dataset.csv
+  default_dir: data/processed
+
+diagnostics:
+  default_enabled: false
+  folder: diagnostics
+
+inputs:
+  biomass: data/processed/biomass_master.csv
+  image: data/processed/image_master.csv

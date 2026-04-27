@@ -1,0 +1,104 @@
+# run_pipeline.py
+
+import argparse
+
+from analytics_pipeline.config.logging_config import logger
+
+# Import pipeline steps
+from scripts.build_biomass_master import run as run_biomass
+from scripts.build_image_master import run as run_image
+from scripts.build_calibration_dataset import run as run_calibration
+from scripts.build_calibration_report import main as run_report
+
+
+def parse_args():
+    parser = argparse.ArgumentParser(
+        description="Run analytics pipeline"
+    )
+
+    parser.add_argument(
+        "step",
+        choices=["biomass", "image", "calibration", "report", "all"],
+        help="Pipeline step to run",
+    )
+
+    parser.add_argument(
+        "--refresh",
+        action="store_true",
+        help="Refresh external data (biomass/image)",
+    )
+
+    parser.add_argument(
+        "--diagnostics",
+        action="store_true",
+        help="Enable diagnostics (calibration)",
+    )
+
+    return parser.parse_args()
+
+
+# --- Individual steps ---
+
+def run_step_biomass(args):
+    logger.info("Running biomass step")
+    run_biomass(refresh=args.refresh)
+
+
+def run_step_image(args):
+    logger.info("Running image step")
+    run_image(refresh=args.refresh)
+
+
+def run_step_calibration(args):
+    logger.info("Running calibration step")
+    run_calibration(diagnostics=args.diagnostics)
+
+
+def run_step_report(args):
+    logger.info("Running report step")
+    run_report()
+
+
+# --- Full pipeline ---
+
+def run_all(args):
+    logger.info("🚀 Running full pipeline")
+
+    logger.info("Step 1: Biomass")
+    run_step_biomass(args)
+
+    logger.info("Step 2: Image")
+    run_step_image(args)
+
+    logger.info("Step 3: Calibration")
+    run_step_calibration(args)
+
+    logger.info("Step 4: Report")
+    run_step_report(args)
+
+    logger.info("✅ Pipeline completed successfully")
+
+
+# --- Entry point ---
+
+def main():
+    args = parse_args()
+
+    if args.step == "biomass":
+        run_step_biomass(args)
+
+    elif args.step == "image":
+        run_step_image(args)
+
+    elif args.step == "calibration":
+        run_step_calibration(args)
+
+    elif args.step == "report":
+        run_step_report(args)
+
+    elif args.step == "all":
+        run_all(args)
+
+
+if __name__ == "__main__":
+    main()

@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Calibration Data Report</title>
+  <style>
+    body { font-family: sans-serif; margin: 40px; }
+    h1, h2 { color: #333; }
+  </style>
+</head>
+<body>
+
+<h1>Calibration Data Report</h1>
+
+<h2>Executive summary</h2>
+<ul>
+  <li>Total records: {{ summary.total_rows }}</li>
+  <li>Matched records: {{ summary.matched }}</li>
+  <li>Missing records: {{ summary.missing }}</li>
+  <li>Percent matched: {{ summary.pct_matched }}%</li>
+</ul>
+
+<h2>Overall coverage</h2>
+{{ plots.overall_coverage | safe }}
+
+<h2>Coverage by affiliation</h2>
+{{ plots.coverage_by_affiliation | safe }}
+
+<h2>Coverage over time</h2>
+{{ plots.coverage_over_time | safe }}
+
+</body>
+</html>

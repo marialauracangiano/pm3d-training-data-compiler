@@ -1,0 +1,22 @@
+# config/image.yaml
+
+user_type_value: B4I
+
+columns_to_keep:
+  - package_id
+  - timestamp
+  - date
+  - image_created_at
+  - image_updated_at
+  - affiliation
+  - current_year
+  - email
+  - timing
+  - plot_id
+  - user_type
+  - set_distance
+  - set_set_number
+  - image_image_type
+  - image_image_url
+
+drop_zero_distance: true

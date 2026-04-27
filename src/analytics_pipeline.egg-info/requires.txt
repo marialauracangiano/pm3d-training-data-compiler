@@ -1,0 +1,14 @@
+pandas
+sqlalchemy
+psycopg2-binary
+python-dotenv
+google-api-python-client>=2.80
+google-auth>=2.20
+google-auth-oauthlib>=1.1
+openpyxl>=3.1
+
+[dev]
+pytest
+black
+ruff
+ipykernel
