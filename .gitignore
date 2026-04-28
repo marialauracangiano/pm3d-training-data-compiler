@@ -8,10 +8,12 @@ __pycache__/
 .env
 .venv
 env/
+venv/
 
 # Data
 data/raw/
 data/processed/
+reports/
 
 # Logs
 data/logs/
@@ -26,7 +28,7 @@ data/logs/
 # Pytest
 .pytest_cache/
 
-# Secrets
-.env
-
+# Build / packaging
+build/
+dist/
 *.egg-info/
