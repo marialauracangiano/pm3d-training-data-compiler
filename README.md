@@ -1,6 +1,21 @@
 # Analytics Pipeline
 
 A data pipeline for building biomass, image, and calibration datasets, and generating reports.
+This project integrates data from **Google Drive** and **PostgreSQL**, standardizes it, and produces a merged dataset ready for analysis and reporting.
+
+---
+
+## 📌 What is this?
+
+This pipeline is designed to:
+
+- Ingest biomass data from Google Drive  
+- Ingest image metadata from PostgreSQL  
+- Clean and standardize datasets  
+- Merge datasets into a calibration dataset  
+- Generate reports  
+
+💡 The pipeline is **fully configurable via YAML**, making it easy to reuse across datasets without modifying code.
 
 ---
 
@@ -109,9 +124,18 @@ config/
 
 ## 🔐 Environment Setup
 
-This project relies on environment variables for external services.
+### 1. Create Python environment (Conda)
 
-Create a `.env` file in the project root:
+```bash
+conda create -n analytics-pipeline python=3.10
+conda activate analytics-pipeline
+
+# Install project and dependencies
+pip install -e .
+```
+### 2. Create a `.env` file in the project root
+
+This project relies on environment variables for external services.
 
 ```env
 # ----------------------------
