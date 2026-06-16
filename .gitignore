@@ -32,3 +32,6 @@ data/logs/
 build/
 dist/
 *.egg-info/
+
+# Notebooks
+notebooks/
