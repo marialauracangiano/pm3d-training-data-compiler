@@ -28,7 +28,13 @@ def clean_biomass_data(
 
     logger.info("Starting biomass data cleaning")
     df = df.copy()
-
+    
+    if "wide_format" in locals():
+        raise ValueError(
+        "Wide format handling has been moved out of clean_biomass_data(). "
+        "Please convert data BEFORE calling this function."
+    )
+    
     initial_rows = len(df)
 
     # ------------------------------------------------------------------

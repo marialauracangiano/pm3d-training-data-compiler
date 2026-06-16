@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "analytics_pipeline"
 version = "0.1.0"
-description = "Data pipeline for the PM3D B4I project"
+description = "Data pipeline for the PM3D biomass training data"
 readme = "README.md"
 requires-python = ">=3.10"
 

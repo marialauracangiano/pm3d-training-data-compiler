@@ -7,6 +7,7 @@ from analytics_pipeline.processing.datasets import build_biomass_master
 from analytics_pipeline.processing.acquisition.biomass_drive import get_biomass_folder
 from analytics_pipeline.config.config import require_env_var
 from analytics_pipeline.config.logging_config import logger
+from analytics_pipeline.processing.transforms.plot_id import build_plot_id
 from analytics_pipeline.config.load import load_yaml
 from analytics_pipeline.config.validate import require_keys, require_type
 
@@ -39,7 +40,7 @@ def run(refresh: bool = False):
         "affiliation_map": config["affiliation_map"],
         "rename_map": config["rename_map"],
         "drop_zero_weight": config.get("drop_zero_weight", True),
-    }
+    }   
 
     # --- Build year → folder_id map from env ---
     year_drive_map = {
@@ -66,6 +67,12 @@ def run(refresh: bool = False):
     master_df = build_biomass_master(
         folder_map,
         cleaning_config=cleaning_config,
+    )
+
+    # Build standardized plot_id
+    master_df = build_plot_id(
+        master_df,
+        config,
     )
 
     logger.info(

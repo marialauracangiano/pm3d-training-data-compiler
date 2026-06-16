@@ -5,6 +5,7 @@ import pandas as pd
 from pathlib import Path
 from ..loaders.biomass_csv import load_biomass_folder
 from analytics_pipeline.processing.transforms.biomass import clean_biomass_data
+from analytics_pipeline.processing.transforms.biomass_format import (transform_biomass_wide_to_long)
 
 
 def build_biomass_master(folder_map: dict[int, Path], *, cleaning_config: dict) -> pd.DataFrame:
@@ -33,6 +34,7 @@ def build_biomass_master(folder_map: dict[int, Path], *, cleaning_config: dict) 
             df,
             **cleaning_config,
         )
+
         df["current_year"] = np.int64(year)
         frames.append(df)
 

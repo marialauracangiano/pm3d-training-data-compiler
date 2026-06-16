@@ -57,3 +57,9 @@ def load_biomass_folder(folder_path: str, header_row_index: int = 3) -> pd.DataF
         df_list.append(df)
 
     return pd.concat(df_list, ignore_index=True)
+
+def load_biomass_file(file_path: str, header_row_index: int = 3) -> pd.DataFrame:
+    """
+    Load a single biomass CSV file (useful for testing or debugging).
+    """
+    return pd.read_csv(file_path, header=header_row_index)
