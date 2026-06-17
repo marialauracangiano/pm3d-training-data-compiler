@@ -10,11 +10,12 @@ from analytics_pipeline.config.logging_config import logger
 from analytics_pipeline.processing.transforms.plot_id import build_plot_id
 from analytics_pipeline.config.load import load_yaml
 from analytics_pipeline.config.validate import require_keys, require_type
+from analytics_pipeline.processing.schema.validate import validate_biomass_schema
 
 
 def run(refresh: bool = False):
     logger.info("Loading biomass configuration from YAML")
-    config = load_yaml("biomass.yaml")
+    config = load_yaml("biomass_b4i.yaml")
 
     # --- Validation ---
     require_keys(
@@ -24,6 +25,7 @@ def run(refresh: bool = False):
             "affiliation_source_column",
             "affiliation_map",
             "rename_map",
+            "columns_to_keep",
         ],
         "biomass config",
     )
@@ -39,6 +41,7 @@ def run(refresh: bool = False):
         "affiliation_source_column": config["affiliation_source_column"],
         "affiliation_map": config["affiliation_map"],
         "rename_map": config["rename_map"],
+        "columns_to_keep": config["columns_to_keep"],
         "drop_zero_weight": config.get("drop_zero_weight", True),
     }   
 
@@ -67,6 +70,7 @@ def run(refresh: bool = False):
     master_df = build_biomass_master(
         folder_map,
         cleaning_config=cleaning_config,
+        config=config,
     )
 
     # Build standardized plot_id
@@ -74,6 +78,8 @@ def run(refresh: bool = False):
         master_df,
         config,
     )
+
+    validate_biomass_schema(master_df)
 
     logger.info(
         "Master dataframe has %d rows and %d columns",

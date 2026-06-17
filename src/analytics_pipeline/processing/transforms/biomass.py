@@ -10,6 +10,7 @@ def clean_biomass_data(
     affiliation_source_column: str,
     affiliation_map: dict[str, str],
     rename_map: dict[str, str],
+    columns_to_keep: list[str],
     drop_zero_weight: bool = True,
 ) -> pd.DataFrame:
     """
@@ -64,6 +65,7 @@ def clean_biomass_data(
     # 3. Rename columns
     # ------------------------------------------------------------------
     df = df.rename(columns=rename_map)
+    df = df[columns_to_keep]
 
     # ------------------------------------------------------------------
     # 4. Drop invalid biomass rows

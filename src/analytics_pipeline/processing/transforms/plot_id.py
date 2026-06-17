@@ -48,5 +48,9 @@ def build_plot_id(df: pd.DataFrame, config: dict) -> pd.DataFrame:
         raise ValueError(
             f"Unsupported plot_id type: {plot_config['type']}"
         )
+    
+    for col in config.get("drop_after_plot_id", []):
+        if col in df.columns:
+            df = df.drop(columns=col)
 
     return df
