@@ -41,7 +41,9 @@ def build_image_master(
     )
 
     logger.info(
-        f"Image master loaded with {len(df)} rows and {len(df.columns)} columns"
+        "Image master loaded with %d rows and %d columns",
+        len(df),
+        len(df.columns),
     )
 
     return df

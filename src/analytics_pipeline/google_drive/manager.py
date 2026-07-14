@@ -1,5 +1,5 @@
 # src/analytics_pipeline/google_drive/manager.py
-from datetime import datetime, timedelta
+# from datetime import datetime, timedelta
 from pathlib import Path
 import shutil
 
@@ -9,8 +9,6 @@ from analytics_pipeline.google_drive.client import (
     download_sheet_as_csv,
 )
 from analytics_pipeline.config.logging_config import logger
-from analytics_pipeline.paths import biomass_subdir
-
 
 class DriveManager:
     """
@@ -22,7 +20,7 @@ class DriveManager:
         # Create and store the Drive service when the manager is created
         self.service = service or get_drive_service()
 
-    def download_folder(self, folder_id: str, output_name: str = "biomass", force_download: bool = False) -> Path:
+    def download_folder(self, folder_id: str, output_folder: Path, ) -> Path:
         """
         Download all spreadsheets from a Google Drive folder into: data/biomass/<output_name>
 
@@ -37,7 +35,7 @@ class DriveManager:
         -------
         Path : Local path to downloaded folder
         """
-        output_folder = biomass_subdir(output_name)
+        output_folder = Path(output_folder)
 
         if output_folder.exists():
             shutil.rmtree(output_folder)
@@ -63,6 +61,7 @@ class DriveManager:
             download_sheet_as_csv(
                 file_id=sheet["id"],
                 file_name=name,
+                mime_type=sheet["mimeType"],
                 save_path=output_folder,
                 drive_service=self.service,
             )

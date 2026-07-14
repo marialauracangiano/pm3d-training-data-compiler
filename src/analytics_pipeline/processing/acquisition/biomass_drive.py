@@ -6,12 +6,14 @@ import shutil
 
 from analytics_pipeline.google_drive.manager import DriveManager
 from analytics_pipeline.processing.cache import has_valid_cache
-from analytics_pipeline.paths import biomass_subdir
+#from analytics_pipeline.paths import biomass_subdir
+from analytics_pipeline.paths import biomass_protocol_subdir
 
 CACHE_MAX_AGE = timedelta(days=1)
 
 def get_biomass_folder(
     *,
+    protocol: str,
     year: int,
     folder_id: str,
     refresh: bool = False,
@@ -22,7 +24,8 @@ def get_biomass_folder(
     
     Assumes DriveManager downloads into the biomass raw data directory.
     """
-    output_folder = biomass_subdir(str(year))
+    #output_folder = biomass_subdir(str(year))
+    output_folder = biomass_protocol_subdir(protocol, year)
     manager = DriveManager()
     
     print(f"Checking cache for {output_folder}, refresh={refresh}")
@@ -44,7 +47,7 @@ def get_biomass_folder(
     # --- Download from Google Drive ---
     downloaded_folder = manager.download_folder(
         folder_id=folder_id,
-        output_name=str(year),
+        output_folder=output_folder,
     )
 
     print(f"✅ Downloaded folder to {downloaded_folder}")

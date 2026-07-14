@@ -1,29 +1,37 @@
 # scripts/build_calibration_report.py 
 import pandas as pd
 from pathlib import Path
+import argparse
 
 import plotly.express as px
 from jinja2 import Environment, FileSystemLoader
 
 from analytics_pipeline.config.logging_config import logger
-from analytics_pipeline.paths import PROCESSED_DIR, PROJECT_ROOT
+from analytics_pipeline.paths import (
+    PROJECT_ROOT,
+    protocol_processed_dir,
+)
 
-
-REPORTS_DIR = PROJECT_ROOT / "reports"
 TEMPLATES_DIR = PROJECT_ROOT / "reports" / "templates"
 
-REPORTS_DIR.mkdir(parents=True, exist_ok=True)
-
-
-def load_diagnostics():
+def load_diagnostics(processed_dir: Path):
     logger.info("Loading diagnostic CSVs")
 
-    reconciliation = pd.read_csv(PROCESSED_DIR / "diagnostics/calibration_reconciliation.csv")
-    coverage_aff = pd.read_csv(PROCESSED_DIR / "diagnostics/coverage_by_affiliation.csv")
-    coverage_year_aff = pd.read_csv(PROCESSED_DIR / "diagnostics/coverage_by_year_affiliation.csv")
+    diagnostics_dir = processed_dir / "diagnostics"
+
+    reconciliation = pd.read_csv(
+        diagnostics_dir / "calibration_reconciliation.csv"
+    )
+
+    coverage_aff = pd.read_csv(
+        diagnostics_dir / "coverage_by_affiliation.csv"
+    )
+
+    coverage_year_aff = pd.read_csv(
+        diagnostics_dir / "coverage_by_year_affiliation.csv"
+    )
 
     return reconciliation, coverage_aff, coverage_year_aff
-
 
 def build_summary(reconciliation: pd.DataFrame) -> dict:
     total_rows = len(reconciliation)
@@ -81,7 +89,7 @@ def build_plots(reconciliation, coverage_aff, coverage_year_aff):
     return plots
 
 
-def render_report(summary, plots):
+def render_report(summary, plots, output_dir: Path):
     env = Environment(loader=FileSystemLoader(TEMPLATES_DIR))
     template = env.get_template("calibration_report.html")
 
@@ -90,19 +98,44 @@ def render_report(summary, plots):
         plots=plots,
     )
 
-    output_path = REPORTS_DIR / "calibration_report.html"
+    report_dir = output_dir / "report"
+    report_dir.mkdir(parents=True, exist_ok=True)
+
+    output_path = report_dir / "calibration_report.html"
     output_path.write_text(html)
 
     logger.info("✅ Calibration report written to %s", output_path)
 
 
-def main():
-    reconciliation, coverage_aff, coverage_year_aff = load_diagnostics()
+def run(protocol: str):
+    logger.info("Building calibration report")
+
+    processed_dir = protocol_processed_dir(protocol.upper())
+
+    reconciliation, coverage_aff, coverage_year_aff = load_diagnostics(processed_dir)
 
     summary = build_summary(reconciliation)
     plots = build_plots(reconciliation, coverage_aff, coverage_year_aff)
 
-    render_report(summary, plots)
+    render_report(summary, plots, processed_dir)
+
+
+def parse_args():
+    parser = argparse.ArgumentParser(
+        description="Build calibration report"
+    )
+
+    parser.add_argument(
+        "--protocol",
+        help="Protocol to build the report for",
+    )
+
+    return parser.parse_args()
+
+
+def main():
+    args = parse_args()
+    run(protocol=args.protocol)
 
 
 if __name__ == "__main__":

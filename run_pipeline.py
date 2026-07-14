@@ -8,7 +8,7 @@ from analytics_pipeline.config.logging_config import logger
 from scripts.build_biomass_master import run as run_biomass
 from scripts.build_image_master import run as run_image
 from scripts.build_calibration_dataset import run as run_calibration
-from scripts.build_calibration_report import main as run_report
+from scripts.build_calibration_report import run as run_report
 
 
 def parse_args():
@@ -18,10 +18,17 @@ def parse_args():
 
     parser.add_argument(
         "step",
+        nargs="?",
+        default="all",
         choices=["biomass", "image", "calibration", "report", "all"],
-        help="Pipeline step to run",
+        help="Pipeline step to run (dafault: all)",
     )
 
+    parser.add_argument(
+        "--protocol",
+        help="Protocol name (optional for image step)",
+    )
+    
     parser.add_argument(
         "--refresh",
         action="store_true",
@@ -39,25 +46,40 @@ def parse_args():
 
 # --- Individual steps ---
 
-def run_step_biomass(args):
+def run_step_biomass(args):        
     logger.info("Running biomass step")
-    run_biomass(refresh=args.refresh)
 
+    run_biomass(
+        config_file=f"biomass_{args.protocol}.yaml",
+        refresh=args.refresh,
+    )
 
 def run_step_image(args):
     logger.info("Running image step")
-    run_image(refresh=args.refresh)
-
+    run_image(
+        protocol=args.protocol,
+        refresh=args.refresh,
+    )
 
 def run_step_calibration(args):
     logger.info("Running calibration step")
-    run_calibration(diagnostics=args.diagnostics)
+    run_calibration(
+        protocol=args.protocol,
+        diagnostics=args.diagnostics,
+        )
 
 
 def run_step_report(args):
+    if not args.diagnostics:
+        raise ValueError(
+            "Report generation requires diagnostics. Run calibration with --diagnostics first."
+        )
+        
     logger.info("Running report step")
-    run_report()
 
+    run_report(
+        protocol=args.protocol,
+    )
 
 # --- Full pipeline ---
 
@@ -73,8 +95,14 @@ def run_all(args):
     logger.info("Step 3: Calibration")
     run_step_calibration(args)
 
-    logger.info("Step 4: Report")
-    run_step_report(args)
+    if args.diagnostics:
+        logger.info("Step 4: Report")
+        run_step_report(args)
+    else:
+        logger.info(
+            "Skipping report generation "
+            "(run with --diagnostics to generate report)"
+        )
 
     logger.info("✅ Pipeline completed successfully")
 
@@ -83,6 +111,13 @@ def run_all(args):
 
 def main():
     args = parse_args()
+    if (
+        args.step in {"all", "biomass", "calibration", "report"}
+        and args.protocol is None
+    ):
+        raise ValueError(
+            "--protocol is required for this pipeline step."
+        )
 
     if args.step == "biomass":
         run_step_biomass(args)

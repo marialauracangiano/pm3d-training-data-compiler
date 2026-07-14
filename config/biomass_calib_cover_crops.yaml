@@ -1,0 +1,86 @@
+# config/biomass_calib_cover_crops.yaml
+
+protocol: calib_cover_crops
+format: wide
+
+years:
+  - 2024
+  - 2025
+  - 2026
+
+affiliation_source_column: "Image Name (from PlantMap3D app)"
+
+affiliation_map:
+  DV-Testing: DV01
+  DE-VanGessel: DE
+  MN-Sarangi: MN
+  NE-Lindquist: NE
+  NC-Leon: NC02
+  PA-Wallace: PA
+  VA-Singh: VA
+  OH-Essman: OH
+  MD-Mirsky: MD
+  IL-Gage: IL
+  KY-Haramoto: KY
+  NY-Kumar: NY01
+  GA-Basinger: GA
+  TX-Bagavathiannan: TX
+  NC-Reberg-Horton: NC01
+
+rename_map:
+  Sample Date: sample_date
+  Timing (1, 2, 3): timing
+  Mix name: mix_name
+  "Quadrat # (1 to 5)": quadrat
+
+plot_id:
+  type: composite
+
+  separator: "-"
+
+  components:
+    - column: mix_name
+    - column: quadrat
+
+drop_after_plot_id:
+  - mix_name
+  - quadrat
+
+columns_to_keep:
+  - Image Name (from PlantMap3D app)
+  - sample_date
+  - timing
+  - mix_name
+  - quadrat
+  - species
+  - dry_weight_g
+  - affiliation
+
+wide_format:
+
+  base_columns:
+    - Image Name (from PlantMap3D app)
+    - Sample Date
+    - Timing (1, 2, 3)
+    - Mix name
+    - "Quadrat # (1 to 5)"
+
+  groups:
+
+    - name: cereal
+      species_column: Cereal Species
+      weight_column: Cereal Dry Wt (g)
+
+    - name: legume
+      species_column: Legume Species
+      weight_column: Legume Dry Wt (g)
+
+    - name: brassica
+      species_column: Brassica Species
+      weight_column: Brassica Dry Wt (g)
+
+    - name: other
+      species_column: null
+      weight_column: Other Dry Wt (g)
+
+drop_zero_weight: false

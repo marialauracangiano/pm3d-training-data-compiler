@@ -2,11 +2,10 @@
 
 from pathlib import Path
 from datetime import timedelta
-import shutil
 import pandas as pd
 
 from analytics_pipeline.processing.cache import has_valid_file_cache
-from analytics_pipeline.paths import processed_file
+from analytics_pipeline.paths import raw_image_file
 from analytics_pipeline.postgres.client import create_pg_engine
 from analytics_pipeline.config.logging_config import logger
 
@@ -15,19 +14,19 @@ CACHE_MAX_AGE = timedelta(days=1)
 def get_image_data(
     *,
     refresh: bool = False,
-    max_age: timedelta | None = timedelta(days=1),
+    max_age: timedelta | None = CACHE_MAX_AGE,
 ) -> Path:
     """
     Returns a local CSV file containing image/package data from Postgres.
     Downloads fresh data if cache is invalid or --refresh is requested.
     """
-    output_file = processed_file("image_master.csv")
+    output_file = raw_image_file()
     engine = create_pg_engine()
 
     logger.debug(f"Checking cache for {output_file}, refresh={refresh}")
 
     # Use cached file if valid and not forcing refresh
-    if not refresh and has_valid_file_cache(output_file, max_age=CACHE_MAX_AGE):
+    if not refresh and has_valid_file_cache(output_file, max_age=max_age):
         logger.info(f"✅ Using cached file: {output_file}")
         return output_file
 

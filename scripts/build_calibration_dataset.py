@@ -12,11 +12,13 @@ from analytics_pipeline.config.validate import (
     require_nested_keys,
     require_type,
 )
+from analytics_pipeline.paths import protocol_processed_dir
 
-
-def run(diagnostics: bool = False):
+def run(protocol: str, diagnostics: bool = False):
     logger.info("Loading calibration configuration from YAML")
     config = load_yaml("calibration.yaml")
+    protocol = protocol.upper()
+    processed_dir = protocol_processed_dir(protocol)
 
     # --- Validation ---
     require_keys(config, ["merge_keys", "inputs", "output", "diagnostics"], "calibration config")
@@ -36,10 +38,10 @@ def run(diagnostics: bool = False):
     # --- Extract config AFTER validation ---
     merge_keys = config["merge_keys"]
 
-    biomass_path = config["inputs"]["biomass"]
-    image_path = config["inputs"]["image"]
+    biomass_path = processed_dir / "biomass_master.csv"
+    image_path = processed_dir / "image_master.csv"
 
-    output_dir = Path(config["output"]["default_dir"])
+    output_dir = processed_dir
     output_filename = config["output"]["filename"]
 
     diagnostics_enabled = diagnostics or config["diagnostics"]["default_enabled"]

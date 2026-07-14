@@ -7,24 +7,41 @@ from analytics_pipeline.processing.datasets.image_master import build_image_mast
 from analytics_pipeline.config.logging_config import logger
 from analytics_pipeline.config.load import load_yaml
 from analytics_pipeline.config.validate import require_keys, require_type
+from analytics_pipeline.paths import protocol_processed_dir
 
 
-def run(refresh: bool = False):
+def run(protocol: str | None = None, refresh: bool = False):
     logger.info("Loading image configuration from YAML")
     config = load_yaml("image.yaml")
+    
+    if protocol is None:
+        protocol_name = "UNFILTERED"
+        protocol_filters = {}
+    else:
+        
+        protocol = protocol.upper()
+
+        if protocol not in config["filters"]:
+            raise ValueError(
+                f"No filters defined for protocol '{protocol}' in image.yaml"
+            )
+
+        protocol_name = protocol
+        protocol_filters = config["filters"][protocol]
 
     # --- Validation ---
     require_keys(
         config,
-        ["user_type_value", "columns_to_keep"],
+        ["filters", "columns_to_keep"],
         "image config",
     )
 
     require_type(config["columns_to_keep"], list, "columns_to_keep")
+    require_type(config["filters"], dict, "filters")
 
     # --- Extract config AFTER validation ---
     image_cleaning_config = {
-        "user_type_value": config["user_type_value"],
+        "filters": protocol_filters,
         "columns_to_keep": config["columns_to_keep"],
         "drop_zero_distance": config.get("drop_zero_distance", True),
     }
@@ -36,8 +53,7 @@ def run(refresh: bool = False):
         cleaning_config=image_cleaning_config,
     )
 
-    output_dir = Path("data/processed")
-    output_dir.mkdir(parents=True, exist_ok=True)
+    output_dir = protocol_processed_dir(protocol_name)
 
     output_csv = output_dir / "image_master.csv"
 
@@ -63,12 +79,21 @@ def parse_args() -> argparse.Namespace:
         action="store_true",
         help="Force re-querying Postgres instead of using cached CSV",
     )
+    
+    parser.add_argument(
+        "--protocol",
+        default="b4i",
+        help="Protocol name (e.g. b4i, calib_cover_crops)"
+    )
     return parser.parse_args()
 
 
 def main():
     args = parse_args()
-    run(refresh=args.refresh)
+    run(
+        protocol=args.protocol,
+        refresh=args.refresh,
+    )
 
 
 if __name__ == "__main__":

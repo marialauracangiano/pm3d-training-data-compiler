@@ -7,7 +7,7 @@ from analytics_pipeline.config.logging_config import logger
 def clean_image_data(
     df: pd.DataFrame,
     *,
-    user_type_value: str,
+    filters: dict[str, str],
     columns_to_keep: list[str],
     drop_zero_distance: bool = True,
 ) -> pd.DataFrame:
@@ -31,17 +31,30 @@ def clean_image_data(
     initial_rows = len(df)
 
     # ------------------------------------------------------------------
-    # 1. Filter by user type
+    # 1. Apply protocol filters
     # ------------------------------------------------------------------
-    if "user_type" not in df.columns:
-        raise KeyError("Column 'user_type' not found in image data")
+    if not filters:
+        logger.info("No image filters specified. Keeping all image records.")
+    else:
+    
+        for column, value in filters.items():
 
-    df = df[df["user_type"] == user_type_value]
-    logger.info(
-        f"Filtered user_type='{user_type_value}': "
-        f"{initial_rows} → {len(df)} rows"
-    )
+            if column not in df.columns:
+                raise KeyError(
+                    f"Column '{column}' not found in image data"
+                )
 
+            before = len(df)
+
+            df = df[df[column] == value]
+
+            logger.info(
+                "Filtered %s='%s': %d → %d rows",
+                column,
+                value,
+                before,
+                len(df),
+            )
     # ------------------------------------------------------------------
     # 2. Select required columns
     # ------------------------------------------------------------------

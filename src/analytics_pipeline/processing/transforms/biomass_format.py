@@ -24,7 +24,7 @@ def transform_biomass_wide_to_long(df: pd.DataFrame, config: dict) -> pd.DataFra
                 continue
 
             if g["name"] == "other":
-                species = "other"
+                species = "Other"
             else:
                 species = row.get(g["species_column"])
 

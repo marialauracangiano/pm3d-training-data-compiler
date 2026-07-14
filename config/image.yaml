@@ -1,6 +1,17 @@
 # config/image.yaml
 
-user_type_value: B4I
+filters:
+
+  B4I:
+    user_type: B4I
+
+  CALIB_COVER_CROPS:
+    user_type: Calibrator
+    type_of_crop: Cover Crop
+
+  CALIB_WEEDS:
+    user_type: Calibrator
+    type_of_crop: Cash Crop
 
 columns_to_keep:
   - package_id
@@ -8,14 +19,19 @@ columns_to_keep:
   - date
   - image_created_at
   - image_updated_at
+  - user_type
   - affiliation
   - current_year
   - email
   - timing
   - plot_id
-  - user_type
-  - set_distance
+  - field_id
+  - transect_id
   - set_set_number
+  - type_of_cash_crop
+  - type_of_cover_crops
+  - type_of_crop
+  - set_distance
   - image_image_type
   - image_image_url
 

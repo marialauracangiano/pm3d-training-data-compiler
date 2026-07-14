@@ -1,5 +1,6 @@
 # src/analytics_pipeline/google_drive/client.py
 import io
+import pandas as pd
 from pathlib import Path
 from googleapiclient.discovery import build
 from googleapiclient.http import MediaIoBaseDownload, MediaFileUpload
@@ -29,25 +30,36 @@ def list_sheets_in_folder(folder_id, drive_service=None):
         drive_service = get_drive_service()
 
     query = (
-        f"'{folder_id}' in parents and mimeType='application/vnd.google-apps.spreadsheet' "
-        "and trashed = false"
+        f"'{folder_id}' in parents and trashed = false"
     )
 
     results = drive_service.files().list(
         q=query,
-        fields="files(id, name)",
+        fields="files(id, name, mimeType)",
         supportsAllDrives=True,
         includeItemsFromAllDrives=True,
     ).execute()
 
     files = results.get("files", [])
-    logger.info(f"Found {len(files)} spreadsheet(s) in folder {folder_id}.")
-    return files
+    spreadsheet_files = [
+        f for f in files
+        if f["mimeType"] in {
+            "application/vnd.google-apps.spreadsheet",
+            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        }
+    ]
+    
+    logger.info(f"Found {len(spreadsheet_files)} spreadsheet(s) in folder {folder_id}.")
+    return spreadsheet_files
 
 
-def download_sheet_as_csv(file_id, file_name, save_path, drive_service=None):
+def download_sheet_as_csv(file_id, file_name, mime_type, save_path, drive_service=None):
     """
-    Download a Google Sheet as CSV.
+    Download a spreadsheet and save locally as CSV.
+
+    Supports:
+    - Google Sheets
+    - Excel (.xlsx)
     
     Parameters:
         file_id (str): ID of the Google Sheet
@@ -64,24 +76,60 @@ def download_sheet_as_csv(file_id, file_name, save_path, drive_service=None):
     save_path.mkdir(parents=True, exist_ok=True)
 
     output_file = save_path / f"{file_name}.csv"
+    
+    # --------------------------------------------------
+    # Google Sheet -> export directly as CSV
+    # --------------------------------------------------
+    if mime_type == "application/vnd.google-apps.spreadsheet":
 
-    request = drive_service.files().export_media(
-        fileId=file_id,
-        mimeType="text/csv"
-    )
+        request = drive_service.files().export_media(
+            fileId=file_id,
+            mimeType="text/csv",
+        )
 
-    fh = io.BytesIO()
-    downloader = MediaIoBaseDownload(fh, request)
+        fh = io.BytesIO()
+        downloader = MediaIoBaseDownload(fh, request)
 
-    done = False
-    while not done:
-        _, done = downloader.next_chunk()
+        done = False
+        while not done:
+            _, done = downloader.next_chunk()
 
-    fh.seek(0)
-    with open(output_file, "wb") as f:
-        f.write(fh.read())
+        fh.seek(0)
+
+        with open(output_file, "wb") as f:
+            f.write(fh.read())
+
+    # --------------------------------------------------
+    # Excel file -> download then convert to CSV
+    # --------------------------------------------------
+    elif mime_type == (
+        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+    ):
+
+        request = drive_service.files().get_media(
+            fileId=file_id
+        )
+
+        fh = io.BytesIO()
+        downloader = MediaIoBaseDownload(fh, request)
+
+        done = False
+        while not done:
+            _, done = downloader.next_chunk()
+
+        fh.seek(0)
+
+        df = pd.read_excel(fh)
+
+        df.to_csv(output_file, index=False)
+
+    else:
+        raise ValueError(
+            f"Unsupported spreadsheet type: {mime_type}"
+        )
 
     logger.info(f"Downloaded: {output_file}")
+
     return output_file
 
 

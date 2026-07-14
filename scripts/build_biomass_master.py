@@ -11,11 +11,11 @@ from analytics_pipeline.processing.transforms.plot_id import build_plot_id
 from analytics_pipeline.config.load import load_yaml
 from analytics_pipeline.config.validate import require_keys, require_type
 from analytics_pipeline.processing.schema.validate import validate_biomass_schema
+from analytics_pipeline.paths import protocol_processed_dir
 
-
-def run(refresh: bool = False):
+def run(config_file: str, refresh: bool = False):
     logger.info("Loading biomass configuration from YAML")
-    config = load_yaml("biomass_b4i.yaml")
+    config = load_yaml(config_file)
 
     # --- Validation ---
     require_keys(
@@ -36,6 +36,7 @@ def run(refresh: bool = False):
 
     # --- Extract config AFTER validation ---
     years = config["years"]
+    protocol = config["protocol"].upper()
 
     cleaning_config = {
         "affiliation_source_column": config["affiliation_source_column"],
@@ -45,9 +46,9 @@ def run(refresh: bool = False):
         "drop_zero_weight": config.get("drop_zero_weight", True),
     }   
 
-    # --- Build year → folder_id map from env ---
+    # --- Build folder_id map from env ---
     year_drive_map = {
-        year: require_env_var(f"GOOGLE_DRIVE_BIOMASS_{year}_FOLDER_ID")
+        year: require_env_var(f"GOOGLE_DRIVE_BIOMASS_{protocol}_{year}_FOLDER_ID")
         for year in years
     }
 
@@ -57,6 +58,7 @@ def run(refresh: bool = False):
         logger.info("Fetching biomass folder for year %s", year)
 
         local_path = get_biomass_folder(
+            protocol=protocol,
             year=year,
             folder_id=folder_id,
             refresh=refresh,
@@ -87,8 +89,7 @@ def run(refresh: bool = False):
         len(master_df.columns),
     )
 
-    output_dir = Path("data/processed")
-    output_dir.mkdir(parents=True, exist_ok=True)
+    output_dir = protocol_processed_dir(protocol)
 
     output_csv = output_dir / "biomass_master.csv"
 
@@ -110,13 +111,21 @@ def parse_args():
         action="store_true",
         help="Force re-download from Google Drive",
     )
+    parser.add_argument(
+        "--config",
+        default="biomass_b4i.yaml",
+        help="Biomass protocol config file",
+    )
     return parser.parse_args()
 
 
 def main():
     args = parse_args()
-    run(refresh=args.refresh)
-
+    run(
+        config_file=args.config,
+        refresh=args.refresh,
+    )
+    
 
 if __name__ == "__main__":
     main()
