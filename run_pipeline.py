@@ -21,7 +21,7 @@ def parse_args():
         nargs="?",
         default="all",
         choices=["biomass", "image", "calibration", "report", "all"],
-        help="Pipeline step to run (dafault: all)",
+        help="Pipeline step to run (default: all)",
     )
 
     parser.add_argument(
@@ -50,7 +50,7 @@ def run_step_biomass(args):
     logger.info("Running biomass step")
 
     run_biomass(
-        config_file=f"biomass_{args.protocol}.yaml",
+        config_file=f"{args.protocol}.yaml",
         refresh=args.refresh,
     )
 
@@ -80,6 +80,15 @@ def run_step_report(args):
     run_report(
         protocol=args.protocol,
     )
+    
+def validate_args(args):
+    if (
+        args.step in {"all", "biomass", "calibration", "report"}
+        and args.protocol is None
+    ):
+        raise ValueError(
+            "--protocol is required for this pipeline step."
+        )
 
 # --- Full pipeline ---
 
@@ -111,28 +120,18 @@ def run_all(args):
 
 def main():
     args = parse_args()
-    if (
-        args.step in {"all", "biomass", "calibration", "report"}
-        and args.protocol is None
-    ):
-        raise ValueError(
-            "--protocol is required for this pipeline step."
-        )
 
-    if args.step == "biomass":
-        run_step_biomass(args)
+    validate_args(args)
 
-    elif args.step == "image":
-        run_step_image(args)
+    steps = {
+        "biomass": run_step_biomass,
+        "image": run_step_image,
+        "calibration": run_step_calibration,
+        "report": run_step_report,
+        "all": run_all,
+    }
 
-    elif args.step == "calibration":
-        run_step_calibration(args)
-
-    elif args.step == "report":
-        run_step_report(args)
-
-    elif args.step == "all":
-        run_all(args)
+    steps[args.step](args)
 
 
 if __name__ == "__main__":

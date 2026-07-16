@@ -1,7 +1,6 @@
 # scripts/build_calibration_dataset.py
 
 import argparse
-from pathlib import Path
 import pandas as pd
 
 from analytics_pipeline.processing.datasets.calibration import build_calibration_dataset
@@ -16,38 +15,50 @@ from analytics_pipeline.paths import protocol_processed_dir
 
 def run(protocol: str, diagnostics: bool = False):
     logger.info("Loading calibration configuration from YAML")
-    config = load_yaml("calibration.yaml")
+    config = load_yaml("pipeline.yaml")
+    
+    require_keys(
+        config,
+        ["calibration"],
+        "pipeline config",
+    )
+    
+    calibration_config = config["calibration"]
     protocol = protocol.upper()
     processed_dir = protocol_processed_dir(protocol)
-
-    # --- Validation ---
-    require_keys(config, ["merge_keys", "inputs", "output", "diagnostics"], "calibration config")
 
     require_nested_keys(
         config,
         {
-            "inputs": ["biomass", "image"],
-            "output": ["default_dir", "filename"],
-            "diagnostics": ["default_enabled", "folder"],
+            "calibration": [
+                "merge_keys",
+                "output",
+                "diagnostics",
+            ],
+            "calibration.output": [
+                "filename",
+            ],
+            "calibration.diagnostics": [
+                "default_enabled",
+                "folder",
+            ],
         },
-        "calibration config",
+        "pipeline config",
     )
+    
+    require_type(calibration_config["merge_keys"], list, "calibration.merge_keys")
 
-    require_type(config["merge_keys"], list, "merge_keys")
-
-    # --- Extract config AFTER validation ---
-    merge_keys = config["merge_keys"]
+    merge_keys = calibration_config["merge_keys"]
 
     biomass_path = processed_dir / "biomass_master.csv"
     image_path = processed_dir / "image_master.csv"
 
-    output_dir = processed_dir
-    output_filename = config["output"]["filename"]
+    output_filename = calibration_config["output"]["filename"]
 
-    diagnostics_enabled = diagnostics or config["diagnostics"]["default_enabled"]
+    diagnostics_enabled = diagnostics or calibration_config["diagnostics"]["default_enabled"]
 
     # --- Ensure output dir exists ---
-    output_dir.mkdir(parents=True, exist_ok=True)
+    processed_dir.mkdir(parents=True, exist_ok=True)
 
     logger.info("Loading biomass master CSV from '%s'", biomass_path)
     biomass_df = pd.read_csv(biomass_path)
@@ -65,7 +76,7 @@ def run(protocol: str, diagnostics: bool = False):
         len(image_df.columns),
     )
 
-    logger.info("Output directory set to '%s'", output_dir)
+    logger.info("Output directory set to '%s'", processed_dir)
     logger.info("Building calibration dataset using merge keys: %s", merge_keys)
 
     calibration_df = build_calibration_dataset(
@@ -73,10 +84,10 @@ def run(protocol: str, diagnostics: bool = False):
         image_df,
         merge_keys=merge_keys,
         diagnostics=diagnostics_enabled,
-        output_dir=output_dir,
+        output_dir=processed_dir,
     )
 
-    calibration_csv = output_dir / output_filename
+    calibration_csv = processed_dir / output_filename
 
     calibration_df.to_csv(calibration_csv, index=False)
 
@@ -87,7 +98,7 @@ def run(protocol: str, diagnostics: bool = False):
     )
 
     if diagnostics_enabled:
-        diagnostics_path = output_dir / config["diagnostics"]["folder"]
+        diagnostics_path = processed_dir / calibration_config["diagnostics"]["folder"]
         logger.info("✅ Diagnostic CSVs have been saved to '%s'", diagnostics_path)
 
 

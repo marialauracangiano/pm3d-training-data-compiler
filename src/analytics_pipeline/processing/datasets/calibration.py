@@ -48,6 +48,21 @@ def build_calibration_dataset(
         raise ValueError("merge_keys must be provided to build_calibration_dataset")
     keys = merge_keys
     _validate_merge_keys(biomass_df, image_df, keys)
+    
+    ### Delete when done debugging (start)####
+    logger.info("Biomass merge key dtypes:")
+    logger.info("%s", biomass_df[keys].dtypes)
+
+    logger.info("Image merge key dtypes:")
+    logger.info("%s", image_df[keys].dtypes)
+    
+    logger.info("Biomass plot_id sample:")
+    logger.info("%s", biomass_df["plot_id"].head(10).tolist())
+
+    logger.info("Image plot_id sample:")
+    logger.info("%s", image_df["plot_id"].head(10).tolist())
+    
+    ### Delete when done debugging (end) ####
 
     merged = _merge_biomass_and_images(biomass_df, image_df, keys)
 

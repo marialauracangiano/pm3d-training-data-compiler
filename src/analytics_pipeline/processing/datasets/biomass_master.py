@@ -10,7 +10,12 @@ from analytics_pipeline.processing.adapters.biomass_adapter import (
 )
 
 
-def build_biomass_master(folder_map: dict[int, Path], *, config: dict, cleaning_config: dict) -> pd.DataFrame:
+def build_biomass_master(
+    folder_map: dict[int, Path], 
+    *, 
+    biomass_config: dict, 
+    cleaning_config: dict,
+    ) -> pd.DataFrame:
     """
     Given a dict mapping {year: folder_path}, load all biomass CSVs
     and produce a combined dataset.
@@ -32,7 +37,7 @@ def build_biomass_master(folder_map: dict[int, Path], *, config: dict, cleaning_
     for year in sorted(folder_map):
         folder = folder_map[year]
         df = load_biomass_folder(folder)
-        df = to_standard_biomass_format(df, config)
+        df = to_standard_biomass_format(df, biomass_config)
         df = clean_biomass_data(
             df,
             **cleaning_config,

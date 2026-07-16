@@ -34,7 +34,7 @@ def build_image_master(
     csv_path = get_image_data(refresh=refresh)
     logger.info(f"Loading image data from {csv_path}")
 
-    df = pd.read_csv(csv_path)
+    df = pd.read_csv(csv_path, low_memory=False)
     df = clean_image_data(
         df,
         **cleaning_config,

@@ -1,7 +1,6 @@
 # scripts/build_biomass_master.py
 
 import argparse
-from pathlib import Path
 
 from analytics_pipeline.processing.datasets import build_biomass_master
 from analytics_pipeline.processing.acquisition.biomass_drive import get_biomass_folder
@@ -15,11 +14,23 @@ from analytics_pipeline.paths import protocol_processed_dir
 
 def run(config_file: str, refresh: bool = False):
     logger.info("Loading biomass configuration from YAML")
-    config = load_yaml(config_file)
+    protocol_config = load_yaml(config_file)
+    
+    require_keys(
+        protocol_config,
+        [
+            "protocol",
+            "biomass",
+            "plot_id",
+        ],
+        "protocol config",
+    )
+    
+    biomass_config = protocol_config["biomass"]
 
     # --- Validation ---
     require_keys(
-        config,
+        biomass_config,
         [
             "years",
             "affiliation_source_column",
@@ -30,20 +41,20 @@ def run(config_file: str, refresh: bool = False):
         "biomass config",
     )
 
-    require_type(config["years"], list, "years")
-    require_type(config["affiliation_map"], dict, "affiliation_map")
-    require_type(config["rename_map"], dict, "rename_map")
+    require_type(biomass_config["years"], list, "years")
+    require_type(biomass_config["affiliation_map"], dict, "affiliation_map")
+    require_type(biomass_config["rename_map"], dict, "rename_map")
 
     # --- Extract config AFTER validation ---
-    years = config["years"]
-    protocol = config["protocol"].upper()
+    years = biomass_config["years"]
+    protocol = protocol_config["protocol"].upper()
 
     cleaning_config = {
-        "affiliation_source_column": config["affiliation_source_column"],
-        "affiliation_map": config["affiliation_map"],
-        "rename_map": config["rename_map"],
-        "columns_to_keep": config["columns_to_keep"],
-        "drop_zero_weight": config.get("drop_zero_weight", True),
+        "affiliation_source_column": biomass_config["affiliation_source_column"],
+        "affiliation_map": biomass_config["affiliation_map"],
+        "rename_map": biomass_config["rename_map"],
+        "columns_to_keep": biomass_config["columns_to_keep"],
+        "drop_zero_weight": biomass_config.get("drop_zero_weight", True),
     }   
 
     # --- Build folder_id map from env ---
@@ -72,13 +83,14 @@ def run(config_file: str, refresh: bool = False):
     master_df = build_biomass_master(
         folder_map,
         cleaning_config=cleaning_config,
-        config=config,
+        biomass_config=biomass_config,
     )
 
     # Build standardized plot_id
     master_df = build_plot_id(
         master_df,
-        config,
+        protocol_config,
+        source="biomass",
     )
 
     validate_biomass_schema(master_df)
@@ -90,7 +102,8 @@ def run(config_file: str, refresh: bool = False):
     )
 
     output_dir = protocol_processed_dir(protocol)
-
+    output_dir.mkdir(parents=True, exist_ok=True)
+    
     output_csv = output_dir / "biomass_master.csv"
 
     logger.info("Saving master CSV to %s", output_csv)

@@ -3,12 +3,16 @@
 import pandas as pd
 
 
-def build_plot_id(df: pd.DataFrame, config: dict) -> pd.DataFrame:
+def build_plot_id(df: pd.DataFrame, config: dict, source: str) -> pd.DataFrame:
     """
     Build standardized plot_id column from config.
     """
+    if source not in config["plot_id"]:
+        raise ValueError(
+            f"No plot_id configuration defined for source '{source}'."
+        )
 
-    plot_config = config["plot_id"]
+    plot_config = config["plot_id"][source]
 
     # -----------------------------------
     # Existing plot_id column
@@ -35,7 +39,15 @@ def build_plot_id(df: pd.DataFrame, config: dict) -> pd.DataFrame:
             column = component["column"]
             prefix = component.get("prefix", "")
 
-            part = prefix + df[column].astype(str)
+            part = df[column].astype(str)
+
+            if "strip_prefix" in component:
+                part = part.str.removeprefix(component["strip_prefix"])
+            
+            if component.get("strip_leading_zeros", False):
+                part = part.str.lstrip("0").replace("", "0")
+
+            part = prefix + part
 
             parts.append(part)
 
@@ -49,8 +61,5 @@ def build_plot_id(df: pd.DataFrame, config: dict) -> pd.DataFrame:
             f"Unsupported plot_id type: {plot_config['type']}"
         )
     
-    for col in config.get("drop_after_plot_id", []):
-        if col in df.columns:
-            df = df.drop(columns=col)
 
     return df

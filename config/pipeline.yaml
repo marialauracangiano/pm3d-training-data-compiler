@@ -1,0 +1,42 @@
+# config/pipeline.yaml
+
+calibration:
+
+  merge_keys:
+    - current_year
+    - affiliation
+    - timing
+    - plot_id
+
+  output:
+    filename: calibration_dataset.csv
+
+  diagnostics:
+    default_enabled: false
+    folder: diagnostics
+
+image:
+
+  columns_to_keep:
+      - package_id
+      - timestamp
+      - date
+      - image_created_at
+      - image_updated_at
+      - user_type
+      - affiliation
+      - current_year
+      - email
+      - timing
+      - plot_id
+      - field_id
+      - transect_id
+      - set_set_number
+      - type_of_cash_crop
+      - type_of_cover_crops
+      - type_of_crop
+      - set_distance
+      - image_image_type
+      - image_image_url
+
+  drop_zero_distance: true
