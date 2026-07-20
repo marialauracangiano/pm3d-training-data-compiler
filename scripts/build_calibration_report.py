@@ -1,4 +1,4 @@
-# scripts/build_calibration_report.py 
+# scripts/build_calibration_report.py
 import pandas as pd
 from pathlib import Path
 import argparse
@@ -14,24 +14,22 @@ from analytics_pipeline.paths import (
 
 TEMPLATES_DIR = PROJECT_ROOT / "reports" / "templates"
 
+
 def load_diagnostics(processed_dir: Path):
     logger.info("Loading diagnostic CSVs")
 
     diagnostics_dir = processed_dir / "diagnostics"
 
-    reconciliation = pd.read_csv(
-        diagnostics_dir / "calibration_reconciliation.csv"
-    )
+    reconciliation = pd.read_csv(diagnostics_dir / "calibration_reconciliation.csv")
 
-    coverage_aff = pd.read_csv(
-        diagnostics_dir / "coverage_by_affiliation.csv"
-    )
+    coverage_aff = pd.read_csv(diagnostics_dir / "coverage_by_affiliation.csv")
 
     coverage_year_aff = pd.read_csv(
         diagnostics_dir / "coverage_by_year_affiliation.csv"
     )
 
     return reconciliation, coverage_aff, coverage_year_aff
+
 
 def build_summary(reconciliation: pd.DataFrame) -> dict:
     total_rows = len(reconciliation)
@@ -53,8 +51,7 @@ def build_plots(reconciliation, coverage_aff, coverage_year_aff):
 
     # Overall coverage
     coverage_counts = (
-        reconciliation
-        .assign(status=lambda df: df["missing_source"].fillna("matched"))
+        reconciliation.assign(status=lambda df: df["missing_source"].fillna("matched"))
         .groupby("status")
         .size()
         .reset_index(name="count")
@@ -121,9 +118,7 @@ def run(protocol: str):
 
 
 def parse_args():
-    parser = argparse.ArgumentParser(
-        description="Build calibration report"
-    )
+    parser = argparse.ArgumentParser(description="Build calibration report")
 
     parser.add_argument(
         "--protocol",

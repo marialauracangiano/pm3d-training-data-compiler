@@ -12,10 +12,11 @@ from analytics_pipeline.config.validate import require_keys, require_type
 from analytics_pipeline.processing.schema.validate import validate_biomass_schema
 from analytics_pipeline.paths import protocol_processed_dir
 
+
 def run(config_file: str, refresh: bool = False):
     logger.info("Loading biomass configuration from YAML")
     protocol_config = load_yaml(config_file)
-    
+
     require_keys(
         protocol_config,
         [
@@ -25,7 +26,7 @@ def run(config_file: str, refresh: bool = False):
         ],
         "protocol config",
     )
-    
+
     biomass_config = protocol_config["biomass"]
 
     # --- Validation ---
@@ -55,7 +56,7 @@ def run(config_file: str, refresh: bool = False):
         "rename_map": biomass_config["rename_map"],
         "columns_to_keep": biomass_config["columns_to_keep"],
         "drop_zero_weight": biomass_config.get("drop_zero_weight", True),
-    }   
+    }
 
     # --- Build folder_id map from env ---
     year_drive_map = {
@@ -103,7 +104,7 @@ def run(config_file: str, refresh: bool = False):
 
     output_dir = protocol_processed_dir(protocol)
     output_dir.mkdir(parents=True, exist_ok=True)
-    
+
     output_csv = output_dir / "biomass_master.csv"
 
     logger.info("Saving master CSV to %s", output_csv)
@@ -115,10 +116,9 @@ def run(config_file: str, refresh: bool = False):
 
 # --- CLI wrapper (kept minimal) ---
 
+
 def parse_args():
-    parser = argparse.ArgumentParser(
-        description="Build biomass dataset"
-    )
+    parser = argparse.ArgumentParser(description="Build biomass dataset")
     parser.add_argument(
         "--refresh",
         action="store_true",
@@ -138,7 +138,7 @@ def main():
         config_file=args.config,
         refresh=args.refresh,
     )
-    
+
 
 if __name__ == "__main__":
     main()

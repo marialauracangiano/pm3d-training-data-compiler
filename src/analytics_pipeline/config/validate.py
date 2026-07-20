@@ -2,32 +2,26 @@
 
 from typing import Any
 
+
 class ConfigValidationError(Exception):
     """Raised when  a configuration file is invalid."""
+
     pass
 
 
-def require_keys(
-    config: dict,
-    required_keys: list[str], 
-    context: str
-) -> None:
+def require_keys(config: dict, required_keys: list[str], context: str) -> None:
     """Ensure required keys exist in config."""
-    missing = sorted(
-        key for key in required_keys if key not in config
-    )
+    missing = sorted(key for key in required_keys if key not in config)
 
     if missing:
-        raise ConfigValidationError(
-            f"Missing required keys in {context}: {missing}"
-        )
+        raise ConfigValidationError(f"Missing required keys in {context}: {missing}")
 
 
 def require_nested_keys(
     config: dict,
     nested_keys: dict[str, list[str]],
     context: str,
-    ) -> None:
+) -> None:
     """
     Validate nested structure.
 
@@ -39,13 +33,9 @@ def require_nested_keys(
     """
     for parent, keys in nested_keys.items():
         if parent not in config:
-            raise ConfigValidationError(
-                f"Missing section '{parent}' in {context}"
-            )
+            raise ConfigValidationError(f"Missing section '{parent}' in {context}")
 
-        missing = sorted(
-            k for k in keys if k not in config[parent]
-        )
+        missing = sorted(k for k in keys if k not in config[parent])
 
         if missing:
             raise ConfigValidationError(
@@ -57,7 +47,7 @@ def require_type(
     value: Any,
     expected_type: type,
     name: str,
-    ) -> None:
+) -> None:
     if not isinstance(value, expected_type):
         raise ConfigValidationError(
             f"Invalid type for '{name}': "

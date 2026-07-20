@@ -8,17 +8,20 @@ version = "0.1.0"
 description = "Data pipeline for the PM3D biomass training data"
 readme = "README.md"
 requires-python = ">=3.10"
+authors = [
+    { name = "Maria Laura Cangiano" }
+]
 
 # Runtime dependencies (expand later as needed)
 dependencies = [
-    "pandas",
-    "sqlalchemy",
-    "psycopg2-binary",
-    "python-dotenv",
-    "google-api-python-client>=2.80",
-    "google-auth>=2.20",
-    "google-auth-oauthlib>=1.1",
-    "openpyxl>=3.1"
+    "google-api-python-client>=2.177",
+    "google-auth>=2.40",
+    "google-auth-oauthlib>=1.2",
+    "openpyxl>=3.1",
+    "pandas>=2.3",
+    "psycopg2-binary>=2.9",
+    "python-dotenv>=1.1",
+    "sqlalchemy>=2.0",
 ]
 
 [project.optional-dependencies]
@@ -32,3 +35,7 @@ dev = [
 [tool.setuptools.packages.find]
 where = ["src"]
 include = ["analytics_pipeline*"]
+
+[tool.black]
+line-length = 88
+target-version = ["py310"]

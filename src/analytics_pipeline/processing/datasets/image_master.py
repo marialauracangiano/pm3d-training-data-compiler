@@ -8,7 +8,7 @@ from analytics_pipeline.config.logging_config import logger
 
 def build_image_master(
     *,
-    refresh: bool = False, 
+    refresh: bool = False,
     cleaning_config: dict,
 ) -> pd.DataFrame:
     """
@@ -40,7 +40,7 @@ def build_image_master(
 
     # Load cached Postgres export
     df = pd.read_csv(csv_path, low_memory=False)
-    
+
     # Apply protocol-independent cleaning rules
     df = clean_image_data(
         df,

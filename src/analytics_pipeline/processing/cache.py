@@ -38,7 +38,7 @@ def has_valid_folder_cache(
             age,
             max_age,
         )
-            
+
         return False
 
     logger.info(
@@ -55,7 +55,7 @@ def has_valid_file_cache(
     max_age: timedelta | None = None,
 ) -> bool:
     logger.info("Checking cache for file: %s", path)
-    
+
     if not path.exists():
         logger.info("❌ File does not exist.")
         return False
@@ -66,7 +66,7 @@ def has_valid_file_cache(
 
     mtime = datetime.fromtimestamp(path.stat().st_mtime)
     age = datetime.now() - mtime
-    
+
     if age > max_age:
         logger.info(
             "❌ Cache stale: file is %s old (max allowed %s).",
@@ -80,7 +80,3 @@ def has_valid_file_cache(
         age,
     )
     return True
-
-
-
-

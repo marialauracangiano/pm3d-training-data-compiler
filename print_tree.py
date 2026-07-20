@@ -1,5 +1,6 @@
 from pathlib import Path
 
+
 def print_tree(path: Path, prefix: str = ""):
     """Recursively prints a directory tree including hidden and compiled files."""
     if not path.exists():
@@ -15,6 +16,9 @@ def print_tree(path: Path, prefix: str = ""):
             extension = "    " if i == len(files) - 1 else "│   "
             print_tree(f, prefix + extension)
 
+
 # Set your project root here
-project_root = Path("/Users/mlcangia/Documents/PSA/PM3D/pm3d-b4i-copy/pm3d-b4i-data-compiler-new")
+project_root = Path(
+    "/Users/mlcangia/Documents/PSA/PM3D/pm3d-b4i-copy/pm3d-b4i-data-compiler-new"
+)
 print_tree(project_root)

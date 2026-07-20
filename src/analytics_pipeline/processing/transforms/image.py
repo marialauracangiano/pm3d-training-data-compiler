@@ -36,13 +36,11 @@ def clean_image_data(
     if not filters:
         logger.info("No image filters specified. Keeping all image records.")
     else:
-    
+
         for column, value in filters.items():
 
             if column not in df.columns:
-                raise KeyError(
-                    f"Column '{column}' not found in image data"
-                )
+                raise KeyError(f"Column '{column}' not found in image data")
 
             before = len(df)
 
@@ -74,14 +72,11 @@ def clean_image_data(
             )
 
         before = len(df)
-        
-        valid_distance = (
-            df["set_distance"].notna()
-            & (df["set_distance"] != 0)
-        )
+
+        valid_distance = df["set_distance"].notna() & (df["set_distance"] != 0)
 
         df = df.loc[valid_distance]
-        
+
         logger.info(
             "Dropped %d rows with zero/null set_distance",
             before - len(df),

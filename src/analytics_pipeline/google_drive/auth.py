@@ -17,7 +17,7 @@ def authenticate_google_api() -> Credentials:
     paths = get_google_auth_paths()
     credentials_path = paths["credentials_path"]
     token_path = paths["token_path"]
-    
+
     logger.info(
         "Using Google credentials from %s",
         credentials_path,

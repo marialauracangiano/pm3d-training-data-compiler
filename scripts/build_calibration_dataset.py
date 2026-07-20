@@ -13,16 +13,17 @@ from analytics_pipeline.config.validate import (
 )
 from analytics_pipeline.paths import protocol_processed_dir
 
+
 def run(protocol: str, diagnostics: bool = False):
     logger.info("Loading calibration configuration from YAML")
     config = load_yaml("pipeline.yaml")
-    
+
     require_keys(
         config,
         ["calibration"],
         "pipeline config",
     )
-    
+
     calibration_config = config["calibration"]
     protocol = protocol.upper()
     processed_dir = protocol_processed_dir(protocol)
@@ -65,7 +66,9 @@ def run(protocol: str, diagnostics: bool = False):
 
     output_filename = calibration_config["output"]["filename"]
 
-    diagnostics_enabled = diagnostics or calibration_config["diagnostics"]["default_enabled"]
+    diagnostics_enabled = (
+        diagnostics or calibration_config["diagnostics"]["default_enabled"]
+    )
 
     # --- Ensure output dir exists ---
     processed_dir.mkdir(parents=True, exist_ok=True)
@@ -113,6 +116,7 @@ def run(protocol: str, diagnostics: bool = False):
 
 
 # --- CLI wrapper ---
+
 
 def parse_args():
     parser = argparse.ArgumentParser(

@@ -11,6 +11,7 @@ from analytics_pipeline.config.logging_config import logger
 
 CACHE_MAX_AGE = timedelta(days=1)
 
+
 def get_image_data(
     *,
     refresh: bool = False,
@@ -36,9 +37,9 @@ def get_image_data(
 
     # Fetch data from Postgres
     logger.info("🕒 Fetching fresh data from Postgres...")
-    
+
     engine = create_pg_engine()
-    
+
     query = "SELECT * FROM all_package_data_latest;"  # can be customized if needed
     df = pd.read_sql_query(query, engine)
 

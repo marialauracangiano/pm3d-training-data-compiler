@@ -8,12 +8,7 @@ def validate_biomass_schema(df: pd.DataFrame) -> None:
     """
     Ensure the biomass dataset contains all required pairing columns.
     """
-    missing = sorted(
-        col for col in PAIRING_COLUMNS
-        if col not in df.columns
-        )
+    missing = sorted(col for col in PAIRING_COLUMNS if col not in df.columns)
 
     if missing:
-        raise ValueError(
-            f"Missing required biomass columns: {sorted(missing)}"
-        )
+        raise ValueError(f"Missing required biomass columns: {sorted(missing)}")

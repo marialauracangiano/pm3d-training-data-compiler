@@ -10,11 +10,11 @@ from analytics_pipeline.processing.adapters.biomass_adapter import (
 
 
 def build_biomass_master(
-    folder_map: dict[int, Path], 
-    *, 
-    biomass_config: dict, 
+    folder_map: dict[int, Path],
+    *,
+    biomass_config: dict,
     cleaning_config: dict,
-    ) -> pd.DataFrame:
+) -> pd.DataFrame:
     """
     Build standardized biomass master dataset.
 
@@ -35,28 +35,28 @@ def build_biomass_master(
         Combined standardized biomass dataset.
     """
     if not folder_map:
-        raise ValueError("folder_map is empty") 
+        raise ValueError("folder_map is empty")
 
     frames = []
 
     for year in sorted(folder_map):
         folder = folder_map[year]
-        
+
         # Load raw biomass files
         df = load_biomass_folder(folder)
-        
+
         # Convert protocol-specific formats to standard biomass format
         df = to_standard_biomass_format(
-            df, 
+            df,
             biomass_config,
         )
-        
+
         # Apply common cleaning rules
         df = clean_biomass_data(
             df,
             **cleaning_config,
         )
-        
+
         df = df.loc[:, ~df.columns.duplicated()]
 
         df["current_year"] = int(year)

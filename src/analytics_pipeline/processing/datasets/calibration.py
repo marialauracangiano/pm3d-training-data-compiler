@@ -10,6 +10,7 @@ import hashlib
 
 from analytics_pipeline.config.logging_config import logger
 
+
 def build_calibration_dataset(
     biomass_df: pd.DataFrame,
     image_df: pd.DataFrame,
@@ -93,7 +94,6 @@ def _merge_biomass_and_images(
     image_df: pd.DataFrame,
     merge_keys: List[str],
 ) -> pd.DataFrame:
-    
     """
     Perform an outer join between biomass and image datasets
     for reconciliation diagnostics.
@@ -114,11 +114,13 @@ def _merge_biomass_and_images(
     merged["missing_source"] = (
         merged["_merge"]
         .astype(str)
-        .map({
-            "left_only": "image",
-            "right_only": "biomass",
-            "both": None,
-        })
+        .map(
+            {
+                "left_only": "image",
+                "right_only": "biomass",
+                "both": None,
+            }
+        )
     )
 
     return merged
@@ -138,9 +140,11 @@ def _extract_calibration_dataset(merged_df: pd.DataFrame) -> pd.DataFrame:
 
     return calibration_df
 
+
 def _make_sample_id(row: pd.Series, merge_keys: List[str]) -> str:
     key = "|".join(str(row[k]) for k in merge_keys)
     return hashlib.sha1(key.encode("utf-8")).hexdigest()[:12]
+
 
 # ---------------------------------------------------------------------
 # Diagnostics
@@ -155,13 +159,13 @@ def _generate_diagnostics(
     Generate diagnostic tables for reconciliation analysis.
     """
     diagnostics: Dict[str, pd.DataFrame] = {}
-    
+
     merged_df = merged_df.copy()
 
     merged_df["sample_id"] = merged_df.apply(
         lambda row: _make_sample_id(row, merge_keys),
         axis=1,
-)
+    )
 
     # 1. Full reconciliation table
     diagnostics["calibration_reconciliation"] = merged_df.copy()
@@ -172,8 +176,7 @@ def _generate_diagnostics(
     # 3. Mismatch summary
     group_cols = merge_keys.copy()
     mismatch_summary = (
-        non_matching
-        .groupby(group_cols, dropna=False)
+        non_matching.groupby(group_cols, dropna=False)
         .agg(
             count=("missing_source", "size"),
             missing_source=(
@@ -189,8 +192,7 @@ def _generate_diagnostics(
     # 4. Coverage by affiliation (if present)
     if "affiliation" in merged_df.columns:
         coverage_affiliation = (
-            merged_df
-            .groupby(
+            merged_df.groupby(
                 ["affiliation", "missing_source"],
                 dropna=False,
                 observed=True,
@@ -206,8 +208,7 @@ def _generate_diagnostics(
     # 5. Coverage by year + affiliation (if present)
     if {"current_year", "affiliation"}.issubset(merged_df.columns):
         coverage_year_affiliation = (
-            merged_df
-            .groupby(
+            merged_df.groupby(
                 ["current_year", "affiliation", "missing_source"],
                 dropna=False,
                 observed=True,
@@ -230,15 +231,12 @@ def _write_diagnostics(
     """
     Write diagnostic tables to CSV. under output_dir/diagnostics.
     """
-    
+
     diagnostics_dir = output_dir / "diagnostics"
     diagnostics_dir.mkdir(parents=True, exist_ok=True)
     logger.info(f"Writing diagnostics to {diagnostics_dir}")
 
-    
     for name, df in diagnostics.items():
         output_path = diagnostics_dir / f"{name}.csv"
         df.to_csv(output_path, index=False)
         logger.info(f"Saved diagnostic: {output_path.name}")
-    
-

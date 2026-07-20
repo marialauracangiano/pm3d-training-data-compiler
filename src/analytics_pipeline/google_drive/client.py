@@ -8,9 +8,8 @@ from analytics_pipeline.google_drive.auth import authenticate_google_api
 from analytics_pipeline.config.logging_config import logger
 
 GOOGLE_SHEET_MIME = "application/vnd.google-apps.spreadsheet"
-EXCEL_MIME = (
-    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-)
+EXCEL_MIME = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+
 
 def get_drive_service():
     """
@@ -18,6 +17,7 @@ def get_drive_service():
     """
     creds = authenticate_google_api()
     return build("drive", "v3", credentials=creds)
+
 
 def _download_to_memory(request) -> io.BytesIO:
     """
@@ -35,12 +35,12 @@ def _download_to_memory(request) -> io.BytesIO:
 
 
 def list_sheets_in_folder(
-    folder_id: str, 
+    folder_id: str,
     drive_service=None,
-) -> list[dict]: 
+) -> list[dict]:
     """
     List all Google Sheets in a given folder.
-    
+
     Parameters
     ----------
         folder_id (str): ID of the Drive folder
@@ -52,36 +52,40 @@ def list_sheets_in_folder(
     if drive_service is None:
         drive_service = get_drive_service()
 
-    query = (
-        f"'{folder_id}' in parents and trashed = false"
-    )
+    query = f"'{folder_id}' in parents and trashed = false"
 
-    results = drive_service.files().list(
-        q=query,
-        fields="files(id, name, mimeType)",
-        supportsAllDrives=True,
-        includeItemsFromAllDrives=True,
-    ).execute()
+    results = (
+        drive_service.files()
+        .list(
+            q=query,
+            fields="files(id, name, mimeType)",
+            supportsAllDrives=True,
+            includeItemsFromAllDrives=True,
+        )
+        .execute()
+    )
 
     files = results.get("files", [])
     spreadsheets = [
-        f for f in files
-        if f["mimeType"] in {
+        f
+        for f in files
+        if f["mimeType"]
+        in {
             GOOGLE_SHEET_MIME,
             EXCEL_MIME,
         }
     ]
-    
+
     logger.info("Found %d spreadsheet(s) in folder %s.", len(spreadsheets), folder_id)
     return spreadsheets
 
 
 def download_sheet_as_csv(
-    file_id: str, 
-    file_name: str, 
-    mime_type: str, 
-    save_path: Path | str, 
-    drive_service=None
+    file_id: str,
+    file_name: str,
+    mime_type: str,
+    save_path: Path | str,
+    drive_service=None,
 ) -> Path:
     """
     Download a spreadsheet and save locally as CSV.
@@ -89,7 +93,7 @@ def download_sheet_as_csv(
     Supports:
     - Google Sheets
     - Excel (.xlsx)
-    
+
     Parameters
     ----------
         file_id (str): ID of the Google Sheet
@@ -107,7 +111,7 @@ def download_sheet_as_csv(
     save_path.mkdir(parents=True, exist_ok=True)
 
     output_file = save_path / f"{file_name}.csv"
-    
+
     # --------------------------------------------------
     # Google Sheet -> export directly as CSV
     # --------------------------------------------------
@@ -126,13 +130,9 @@ def download_sheet_as_csv(
     # --------------------------------------------------
     # Excel file -> download then convert to CSV
     # --------------------------------------------------
-    elif mime_type == (
-        EXCEL_MIME
-    ):
+    elif mime_type == (EXCEL_MIME):
 
-        request = drive_service.files().get_media(
-            fileId=file_id
-        )
+        request = drive_service.files().get_media(fileId=file_id)
 
         buffer = _download_to_memory(request)
 
@@ -140,19 +140,17 @@ def download_sheet_as_csv(
         df.to_csv(output_file, index=False)
 
     else:
-        raise ValueError(
-            f"Unsupported spreadsheet type: {mime_type}"
-        )
+        raise ValueError(f"Unsupported spreadsheet type: {mime_type}")
 
-    #logger.info(f"Downloaded spreadsheet to %s", output_file)
+    # logger.info(f"Downloaded spreadsheet to %s", output_file)
 
     return output_file
 
 
 def upload_file(
-    local_path: Path | str, 
-    folder_id: str | None = None, 
-    mime_type = "text/csv",
+    local_path: Path | str,
+    folder_id: str | None = None,
+    mime_type="text/csv",
     drive_service=None,
 ) -> str:
     """
@@ -170,12 +168,16 @@ def upload_file(
         file_metadata["parents"] = [folder_id]
 
     media = MediaFileUpload(str(local_path), mimetype=mime_type)
-    uploaded = drive_service.files().create(
-        body=file_metadata,
-        media_body=media,
-        fields="id, name",
-        supportsAllDrives=True
-    ).execute()
+    uploaded = (
+        drive_service.files()
+        .create(
+            body=file_metadata,
+            media_body=media,
+            fields="id, name",
+            supportsAllDrives=True,
+        )
+        .execute()
+    )
 
     logger.info("Uploaded '%s' to Drive (ID: %s)", local_path.name, uploaded["id"])
     return uploaded["id"]

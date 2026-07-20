@@ -10,6 +10,7 @@ from analytics_pipeline.google_drive.client import (
 )
 from analytics_pipeline.config.logging_config import logger
 
+
 class DriveManager:
     """
     High-level interface for interacting with Google Drive.
@@ -21,9 +22,9 @@ class DriveManager:
         self.service = service or get_drive_service()
 
     def download_folder(
-        self, 
-        folder_id: str, 
-        output_folder: Path, 
+        self,
+        folder_id: str,
+        output_folder: Path,
     ) -> Path:
         """
         Download all spreadsheets from a Google Drive folder into a local directory.
@@ -43,7 +44,7 @@ class DriveManager:
 
         if output_folder.exists():
             shutil.rmtree(output_folder)
-            
+
         output_folder.mkdir(parents=True, exist_ok=True)
 
         # ----------------------------------------------------
@@ -71,9 +72,9 @@ class DriveManager:
             )
 
         logger.info(
-            "Downloaded %d spreadsheets to %s.", 
+            "Downloaded %d spreadsheets to %s.",
             len(sheets),
             output_folder,
         )
-        
+
         return output_folder

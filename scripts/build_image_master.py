@@ -12,17 +12,17 @@ from analytics_pipeline.processing.transforms.plot_id import build_plot_id
 
 def run(protocol: str | None = None, refresh: bool = False):
     logger.info("Loading image configuration from YAML")
-    
+
     pipeline_config = load_yaml("pipeline.yaml")
-    
+
     require_keys(
         pipeline_config,
         ["image"],
         "pipeline config",
     )
-    
+
     image_config = pipeline_config["image"]
-    
+
     if protocol is None:
         logger.info("Loading unfiltered image configuration")
         protocol_name = "UNFILTERED"
@@ -36,7 +36,7 @@ def run(protocol: str | None = None, refresh: bool = False):
         )
 
         protocol_config = load_yaml(f"{protocol.lower()}.yaml")
-        
+
         require_keys(
             protocol_config,
             [
@@ -48,7 +48,7 @@ def run(protocol: str | None = None, refresh: bool = False):
 
         protocol_name = protocol.upper()
         protocol_filters = protocol_config["image"].get("filters", {})
-        
+
     # --- Validation ---
     require_keys(
         image_config,
@@ -100,6 +100,7 @@ def run(protocol: str | None = None, refresh: bool = False):
 
 # --- CLI wrapper ---
 
+
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
         description="Build image master dataset from Postgres"
@@ -109,11 +110,11 @@ def parse_args() -> argparse.Namespace:
         action="store_true",
         help="Force re-querying Postgres instead of using cached CSV",
     )
-    
+
     parser.add_argument(
         "--protocol",
         # default="b4i",
-        help="Protocol name (e.g. b4i, calib_cover_crops)"
+        help="Protocol name (e.g. b4i, calib_cover_crops)",
     )
     return parser.parse_args()
 

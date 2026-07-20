@@ -5,6 +5,7 @@ import yaml
 
 PROJECT_ROOT = Path(__file__).resolve().parents[3]
 
+
 def load_yaml(relative_path: str) -> dict:
     """
     Load a YAML configuration file from the project's config directory.

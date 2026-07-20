@@ -13,7 +13,7 @@ def create_pg_engine() -> Engine:
     """
     try:
         config = get_db_config()
-        
+
         connection_url = (
             f"postgresql+psycopg2://"
             f"{config['user']}:{config['password']}"

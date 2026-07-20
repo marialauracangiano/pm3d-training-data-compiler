@@ -29,7 +29,7 @@ def clean_biomass_data(
     """
 
     logger.info("Starting biomass data cleaning")
-    
+
     df = df.copy()
     initial_rows = len(df)
 
@@ -52,14 +52,12 @@ def clean_biomass_data(
     # ------------------------------------------------------------------
     # 2. Map frontend affiliation → backend affiliation
     # ------------------------------------------------------------------
-    df["affiliation"] = df["affiliation"].map(
-        affiliation_map
-    ).fillna(df["affiliation"])
+    df["affiliation"] = df["affiliation"].map(affiliation_map).fillna(df["affiliation"])
 
     # ------------------------------------------------------------------
     # 3. Rename columns
     # ------------------------------------------------------------------
-    
+
     df = df.rename(columns=rename_map)
     df = df[columns_to_keep]
 
@@ -68,9 +66,7 @@ def clean_biomass_data(
     # ------------------------------------------------------------------
     if drop_zero_weight:
         if "dry_weight_g" not in df.columns:
-            raise KeyError(
-                "Column 'dry_weight_g' required when drop_zero_weight=True"
-            )
+            raise KeyError("Column 'dry_weight_g' required when drop_zero_weight=True")
 
         before = len(df)
         df = df[df["dry_weight_g"].notna() & (df["dry_weight_g"] != 0)]

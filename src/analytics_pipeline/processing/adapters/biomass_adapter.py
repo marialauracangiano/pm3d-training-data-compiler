@@ -5,6 +5,7 @@ from analytics_pipeline.processing.transforms.biomass_format import (
     transform_biomass_wide_to_long,
 )
 
+
 def to_standard_biomass_format(df: pd.DataFrame, config: dict) -> pd.DataFrame:
     format_type = config.get("format")
 

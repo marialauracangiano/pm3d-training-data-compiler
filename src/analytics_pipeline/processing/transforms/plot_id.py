@@ -12,9 +12,7 @@ def build_plot_id(df: pd.DataFrame, protocol_config: dict, source: str) -> pd.Da
     - a composite identifier built from multiple columns
     """
     if source not in protocol_config["plot_id"]:
-        raise ValueError(
-            f"No plot_id configuration defined for source '{source}'."
-        )
+        raise ValueError(f"No plot_id configuration defined for source '{source}'.")
 
     plot_config = protocol_config["plot_id"][source]
 
@@ -32,10 +30,7 @@ def build_plot_id(df: pd.DataFrame, protocol_config: dict, source: str) -> pd.Da
     # -----------------------------------
 
     if plot_config["type"] != "composite":
-        raise ValueError(
-            f"Unsupported plot_id type: {plot_config['type']}"
-        )
-
+        raise ValueError(f"Unsupported plot_id type: {plot_config['type']}")
 
     # -----------------------------------
     # Composite plot_id
@@ -62,9 +57,6 @@ def build_plot_id(df: pd.DataFrame, protocol_config: dict, source: str) -> pd.Da
 
         parts.append(part)
 
-    df["plot_id"] = (
-        pd.concat(parts, axis=1)
-        .agg(separator.join, axis=1)
-    )
+    df["plot_id"] = pd.concat(parts, axis=1).agg(separator.join, axis=1)
 
     return df

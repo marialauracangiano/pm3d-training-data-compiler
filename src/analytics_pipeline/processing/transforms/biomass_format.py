@@ -2,6 +2,7 @@
 
 import pandas as pd
 
+
 def transform_biomass_wide_to_long(df: pd.DataFrame, config: dict) -> pd.DataFrame:
     """
     Converts wide-format biomass cover crop data into long format.
@@ -30,7 +31,7 @@ def transform_biomass_wide_to_long(df: pd.DataFrame, config: dict) -> pd.DataFra
 
             if pd.isna(species):
                 continue
-            
+
             output_row = {
                 **base_data,
                 "species": species,

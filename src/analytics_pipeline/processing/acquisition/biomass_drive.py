@@ -11,6 +11,7 @@ from analytics_pipeline.config.logging_config import logger
 
 CACHE_MAX_AGE = timedelta(days=1)
 
+
 def get_biomass_folder(
     *,
     protocol: str,
@@ -21,12 +22,12 @@ def get_biomass_folder(
 ) -> Path:
     """
     Return a local biomass folder, downloading from Drive if needed.
-    
+
     Assumes DriveManager downloads into the biomass raw data directory.
     """
     output_folder = biomass_protocol_subdir(protocol, year)
     manager = DriveManager()
-    
+
     logger.info(
         "Checking cache for %s (refresh=%s)",
         output_folder,
@@ -46,7 +47,6 @@ def get_biomass_folder(
     # --- Download from Google Drive ---
     if not output_folder.exists():
         logger.info("⬇️ Downloading biomass folder from Drive")
-        
 
     # --- Download from Google Drive ---
     downloaded_folder = manager.download_folder(
