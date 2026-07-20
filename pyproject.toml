@@ -32,6 +32,11 @@ dev = [
     "ipykernel",
 ]
 
+[tool.pytest.ini_options]
+testpaths = [
+    "tests",
+]
+
 [tool.setuptools.packages.find]
 where = ["src"]
 include = ["analytics_pipeline*"]
