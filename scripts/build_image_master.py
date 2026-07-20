@@ -2,11 +2,11 @@
 
 import argparse
 
-from analytics_pipeline.processing.datasets.image_master import build_image_master
-from analytics_pipeline.config.logging_config import logger
 from analytics_pipeline.config.load import load_yaml
+from analytics_pipeline.config.logging_config import logger
 from analytics_pipeline.config.validate import require_keys, require_type
 from analytics_pipeline.paths import protocol_processed_dir
+from analytics_pipeline.processing.datasets.image_master import build_image_master
 from analytics_pipeline.processing.transforms.plot_id import build_plot_id
 
 

@@ -1,9 +1,10 @@
 # src/analytics_pipeline/processing/datasets/image_master.py
 
 import pandas as pd
+
+from analytics_pipeline.config.logging_config import logger
 from analytics_pipeline.processing.acquisition.postgres import get_image_data
 from analytics_pipeline.processing.transforms.image import clean_image_data
-from analytics_pipeline.config.logging_config import logger
 
 
 def build_image_master(

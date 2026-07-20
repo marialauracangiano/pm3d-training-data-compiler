@@ -1,6 +1,8 @@
 import os
 from pathlib import Path
+
 from dotenv import load_dotenv
+
 from analytics_pipeline.paths import PROJECT_ROOT
 
 # Load .env from project root

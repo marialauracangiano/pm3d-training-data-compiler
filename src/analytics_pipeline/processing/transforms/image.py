@@ -1,6 +1,7 @@
 # src/analytics_pipeline/processing/transforms/image.py
 
 import pandas as pd
+
 from analytics_pipeline.config.logging_config import logger
 
 

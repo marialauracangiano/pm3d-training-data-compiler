@@ -2,11 +2,11 @@
 
 from __future__ import annotations
 
+import hashlib
 from pathlib import Path
 from typing import Dict, List
 
 import pandas as pd
-import hashlib
 
 from analytics_pipeline.config.logging_config import logger
 

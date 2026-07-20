@@ -3,8 +3,9 @@
 
 import pandas as pd
 from sqlalchemy.engine import Engine
-from analytics_pipeline.postgres.engine import create_pg_engine
+
 from analytics_pipeline.config.logging_config import logger
+from analytics_pipeline.postgres.engine import create_pg_engine
 
 
 def run_query(

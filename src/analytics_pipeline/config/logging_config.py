@@ -1,4 +1,5 @@
 import logging
+
 from analytics_pipeline.paths import PROJECT_ROOT
 
 LOG_DIR = PROJECT_ROOT / "data" / "logs"

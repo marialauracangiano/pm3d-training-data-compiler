@@ -1,13 +1,14 @@
 # src/analytics_pipeline/processing/acquisition/postgres.py
 
-from pathlib import Path
 from datetime import timedelta
+from pathlib import Path
+
 import pandas as pd
 
-from analytics_pipeline.processing.cache import has_valid_file_cache
+from analytics_pipeline.config.logging_config import logger
 from analytics_pipeline.paths import raw_image_file
 from analytics_pipeline.postgres.client import create_pg_engine
-from analytics_pipeline.config.logging_config import logger
+from analytics_pipeline.processing.cache import has_valid_file_cache
 
 CACHE_MAX_AGE = timedelta(days=1)
 

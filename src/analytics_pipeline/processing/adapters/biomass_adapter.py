@@ -1,6 +1,7 @@
 # src/analytics_pipeline/processing/adapters/biomass_adapter.py
 
 import pandas as pd
+
 from analytics_pipeline.processing.transforms.biomass_format import (
     transform_biomass_wide_to_long,
 )

@@ -1,8 +1,8 @@
 # src/analytics_pipeline/google_drive/auth.py
 
+from google.auth.transport.requests import Request
 from google.oauth2.credentials import Credentials
 from google_auth_oauthlib.flow import InstalledAppFlow
-from google.auth.transport.requests import Request
 
 from analytics_pipeline.config.config import get_google_auth_paths
 from analytics_pipeline.config.logging_config import logger

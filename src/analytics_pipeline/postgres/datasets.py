@@ -3,8 +3,8 @@
 import pandas as pd
 from sqlalchemy.engine import Engine
 
-from analytics_pipeline.postgres.client import run_query
 from analytics_pipeline.config.logging_config import logger
+from analytics_pipeline.postgres.client import run_query
 
 
 def load_image_data(

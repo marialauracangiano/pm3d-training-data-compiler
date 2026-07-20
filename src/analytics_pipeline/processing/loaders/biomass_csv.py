@@ -1,8 +1,10 @@
 # src/analytics_pipeline/processing/loaders/biomass_csv.py
 
-import pandas as pd
-from typing import List
 from pathlib import Path
+from typing import List
+
+import pandas as pd
+
 from analytics_pipeline.config.logging_config import logger
 
 

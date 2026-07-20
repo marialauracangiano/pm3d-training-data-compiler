@@ -6,9 +6,9 @@ from analytics_pipeline.config.logging_config import logger
 
 # Import pipeline steps
 from scripts.build_biomass_master import run as run_biomass
-from scripts.build_image_master import run as run_image
 from scripts.build_calibration_dataset import run as run_calibration
 from scripts.build_calibration_report import run as run_report
+from scripts.build_image_master import run as run_image
 
 
 def parse_args():

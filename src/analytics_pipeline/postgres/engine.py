@@ -3,7 +3,7 @@
 from sqlalchemy import create_engine, text
 from sqlalchemy.engine import Engine
 
-from analytics_pipeline.config.config import get_db_config, ConfigError
+from analytics_pipeline.config.config import ConfigError, get_db_config
 from analytics_pipeline.config.logging_config import logger
 
 

@@ -1,17 +1,18 @@
 # scripts/build_calibration_dataset.py
 
 import argparse
+
 import pandas as pd
 
-from analytics_pipeline.processing.datasets.calibration import build_calibration_dataset
-from analytics_pipeline.config.logging_config import logger
 from analytics_pipeline.config.load import load_yaml
+from analytics_pipeline.config.logging_config import logger
 from analytics_pipeline.config.validate import (
     require_keys,
     # require_nested_keys,
     require_type,
 )
 from analytics_pipeline.paths import protocol_processed_dir
+from analytics_pipeline.processing.datasets.calibration import build_calibration_dataset
 
 
 def run(protocol: str, diagnostics: bool = False):
