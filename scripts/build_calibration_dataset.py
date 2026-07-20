@@ -8,7 +8,7 @@ from analytics_pipeline.config.logging_config import logger
 from analytics_pipeline.config.load import load_yaml
 from analytics_pipeline.config.validate import (
     require_keys,
-    require_nested_keys,
+    # require_nested_keys,
     require_type,
 )
 from analytics_pipeline.paths import protocol_processed_dir
@@ -27,26 +27,36 @@ def run(protocol: str, diagnostics: bool = False):
     protocol = protocol.upper()
     processed_dir = protocol_processed_dir(protocol)
 
-    require_nested_keys(
-        config,
-        {
-            "calibration": [
-                "merge_keys",
-                "output",
-                "diagnostics",
-            ],
-            "calibration.output": [
-                "filename",
-            ],
-            "calibration.diagnostics": [
-                "default_enabled",
-                "folder",
-            ],
-        },
-        "pipeline config",
+    require_keys(
+        calibration_config,
+        [
+            "merge_keys",
+            "output",
+            "diagnostics",
+        ],
+        "calibration config",
     )
-    
-    require_type(calibration_config["merge_keys"], list, "calibration.merge_keys")
+
+    require_keys(
+        calibration_config["output"],
+        ["filename"],
+        "calibration output config",
+    )
+
+    require_keys(
+        calibration_config["diagnostics"],
+        [
+            "default_enabled",
+            "folder",
+        ],
+        "calibration diagnostics config",
+    )
+
+    require_type(
+        calibration_config["merge_keys"],
+        list,
+        "calibration.merge_keys",
+    )
 
     merge_keys = calibration_config["merge_keys"]
 

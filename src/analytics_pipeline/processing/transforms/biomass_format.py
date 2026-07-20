@@ -7,34 +7,36 @@ def transform_biomass_wide_to_long(df: pd.DataFrame, config: dict) -> pd.DataFra
     Converts wide-format biomass cover crop data into long format.
     Each species group becomes a row.
     """
-    groups = config["wide_format"]["groups"]
-    base_cols = config["wide_format"]["base_columns"]
+    wide_config = config["wide_format"]
+    groups = wide_config["groups"]
+    base_cols = wide_config["base_columns"]
 
     rows = []
-
     for _, row in df.iterrows():
 
         base_data = {col: row[col] for col in base_cols}
 
-        for g in groups:
+        for group in groups:
 
-            weight = row.get(g["weight_column"])
+            weight = row.get(group["weight_column"])
 
             if pd.isna(weight) or weight == 0:
                 continue
 
-            if g["name"] == "other":
+            if group["name"] == "other":
                 species = "Other"
             else:
-                species = row.get(g["species_column"])
+                species = row.get(group["species_column"])
 
             if pd.isna(species):
                 continue
-
-            rows.append({
+            
+            output_row = {
                 **base_data,
                 "species": species,
                 "dry_weight_g": weight,
-            })
+            }
+
+            rows.append(output_row)
 
     return pd.DataFrame(rows)

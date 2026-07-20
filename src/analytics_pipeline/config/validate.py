@@ -1,13 +1,21 @@
 # src/analytics_pipeline/config/validate.py
 
+from typing import Any
+
 class ConfigValidationError(Exception):
-    """Raised when configuration is invalid."""
+    """Raised when  a configuration file is invalid."""
     pass
 
 
-def require_keys(config: dict, required_keys: list, context: str):
+def require_keys(
+    config: dict,
+    required_keys: list[str], 
+    context: str
+) -> None:
     """Ensure required keys exist in config."""
-    missing = [key for key in required_keys if key not in config]
+    missing = sorted(
+        key for key in required_keys if key not in config
+    )
 
     if missing:
         raise ConfigValidationError(
@@ -15,7 +23,11 @@ def require_keys(config: dict, required_keys: list, context: str):
         )
 
 
-def require_nested_keys(config: dict, nested_keys: dict, context: str):
+def require_nested_keys(
+    config: dict,
+    nested_keys: dict[str, list[str]],
+    context: str,
+    ) -> None:
     """
     Validate nested structure.
 
@@ -31,7 +43,9 @@ def require_nested_keys(config: dict, nested_keys: dict, context: str):
                 f"Missing section '{parent}' in {context}"
             )
 
-        missing = [k for k in keys if k not in config[parent]]
+        missing = sorted(
+            k for k in keys if k not in config[parent]
+        )
 
         if missing:
             raise ConfigValidationError(
@@ -39,8 +53,14 @@ def require_nested_keys(config: dict, nested_keys: dict, context: str):
             )
 
 
-def require_type(value, expected_type, name: str):
+def require_type(
+    value: Any,
+    expected_type: type,
+    name: str,
+    ) -> None:
     if not isinstance(value, expected_type):
         raise ConfigValidationError(
-            f"Invalid type for '{name}': expected {expected_type}, got {type(value)}"
+            f"Invalid type for '{name}': "
+            f"expected {expected_type.__name__}, "
+            f"got {type(value).__name__}"
         )

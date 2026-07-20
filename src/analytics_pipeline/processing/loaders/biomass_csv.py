@@ -3,9 +3,10 @@
 import pandas as pd
 from typing import List
 from pathlib import Path
+from analytics_pipeline.config.logging_config import logger
 
 
-def load_biomass_folder(folder_path: str, header_row_index: int = 3) -> pd.DataFrame:
+def load_biomass_folder(folder_path: Path | str, header_row_index: int = 3) -> pd.DataFrame:
     """
     Load and vertically concatenate all biomass CSVs inside a folder.
 
@@ -36,9 +37,17 @@ def load_biomass_folder(folder_path: str, header_row_index: int = 3) -> pd.DataF
     df_list: List[pd.DataFrame] = []
 
     # --- Load first file with header ---
-    first = pd.read_csv(csv_files[0], header=header_row_index)
-    expected_columns = list(first.columns)
-    df_list.append(first)
+    logger.info("Loading %d biomass CSV files from %s", len(csv_files), folder)
+    
+    first_file = csv_files[0]
+
+    first_df = pd.read_csv(first_file, header=header_row_index)
+    
+    expected_columns = first_df.columns.tolist()
+    
+    first_df["source_file"] = first_file.name
+
+    df_list.append(first_df)
 
     # --- Load others without header ---
     for file in csv_files[1:]:
@@ -56,9 +65,17 @@ def load_biomass_folder(folder_path: str, header_row_index: int = 3) -> pd.DataF
         df["source_file"] = file.name
         df_list.append(df)
 
-    return pd.concat(df_list, ignore_index=True)
+    master_df = pd.concat(df_list, ignore_index=True)
+    
+    logger.info(
+        "Loaded %d rows from %d biomass files",
+        len(master_df),
+        len(csv_files),
+    )
+    
+    return master_df
 
-def load_biomass_file(file_path: str, header_row_index: int = 3) -> pd.DataFrame:
+def load_biomass_file(file_path: Path | str, header_row_index: int = 3) -> pd.DataFrame:
     """
     Load a single biomass CSV file (useful for testing or debugging).
     """

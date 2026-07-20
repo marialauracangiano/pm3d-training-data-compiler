@@ -48,21 +48,6 @@ def build_calibration_dataset(
         raise ValueError("merge_keys must be provided to build_calibration_dataset")
     keys = merge_keys
     _validate_merge_keys(biomass_df, image_df, keys)
-    
-    ### Delete when done debugging (start)####
-    logger.info("Biomass merge key dtypes:")
-    logger.info("%s", biomass_df[keys].dtypes)
-
-    logger.info("Image merge key dtypes:")
-    logger.info("%s", image_df[keys].dtypes)
-    
-    logger.info("Biomass plot_id sample:")
-    logger.info("%s", biomass_df["plot_id"].head(10).tolist())
-
-    logger.info("Image plot_id sample:")
-    logger.info("%s", image_df["plot_id"].head(10).tolist())
-    
-    ### Delete when done debugging (end) ####
 
     merged = _merge_biomass_and_images(biomass_df, image_df, keys)
 
@@ -110,7 +95,8 @@ def _merge_biomass_and_images(
 ) -> pd.DataFrame:
     
     """
-    Perform an outer join between biomass and image datasets.
+    Perform an outer join between biomass and image datasets
+    for reconciliation diagnostics.
 
     Adds:
     - _merge: pandas merge indicator (internal use)
@@ -179,11 +165,6 @@ def _generate_diagnostics(
 
     # 1. Full reconciliation table
     diagnostics["calibration_reconciliation"] = merged_df.copy()
-    
-    # Add sample_id
-    merged_df["sample_id"] = merged_df.groupby(
-        merge_keys, dropna=False
-    ).ngroup()
 
     # 2. Non-matching rows
     non_matching = merged_df.loc[merged_df["_merge"] != "both"].copy()

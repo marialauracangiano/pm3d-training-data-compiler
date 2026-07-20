@@ -60,9 +60,9 @@ def clean_image_data(
     # ------------------------------------------------------------------
     missing_cols = set(columns_to_keep) - set(df.columns)
     if missing_cols:
-        raise KeyError(f"Missing required columns: {missing_cols}")
+        raise KeyError(f"Missing required columns: {sorted(missing_cols)}")
 
-    df = df[columns_to_keep].copy()
+    df = df.loc[:, columns_to_keep].copy()
 
     # ------------------------------------------------------------------
     # 3. Drop invalid set_distance rows
@@ -74,12 +74,17 @@ def clean_image_data(
             )
 
         before = len(df)
-        df = df[
-            df["set_distance"].notna() &
-            (df["set_distance"] != 0)
-        ]
+        
+        valid_distance = (
+            df["set_distance"].notna()
+            & (df["set_distance"] != 0)
+        )
+
+        df = df.loc[valid_distance]
+        
         logger.info(
-            f"Dropped {before - len(df)} rows with zero/null set_distance"
+            "Dropped %d rows with zero/null set_distance",
+            before - len(df),
         )
 
     # ------------------------------------------------------------------
@@ -89,7 +94,9 @@ def clean_image_data(
         df["timing"] = df["timing"].astype("Int64")
 
     logger.info(
-        f"Image cleaning complete: {initial_rows} → {len(df)} rows"
+        "Image cleaning complete: %d → %d rows",
+        initial_rows,
+        len(df),
     )
 
     return df

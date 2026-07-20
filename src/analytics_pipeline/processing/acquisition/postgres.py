@@ -14,29 +14,31 @@ CACHE_MAX_AGE = timedelta(days=1)
 def get_image_data(
     *,
     refresh: bool = False,
-    max_age: timedelta | None = CACHE_MAX_AGE,
+    max_age: timedelta = CACHE_MAX_AGE,
 ) -> Path:
     """
     Returns a local CSV file containing image/package data from Postgres.
     Downloads fresh data if cache is invalid or --refresh is requested.
     """
     output_file = raw_image_file()
-    engine = create_pg_engine()
 
-    logger.debug(f"Checking cache for {output_file}, refresh={refresh}")
+    logger.debug("Checking cache for %s (refresh=%s)", output_file, refresh)
 
     # Use cached file if valid and not forcing refresh
     if not refresh and has_valid_file_cache(output_file, max_age=max_age):
-        logger.info(f"✅ Using cached file: {output_file}")
+        logger.info("✅ Using cached file: %s", output_file)
         return output_file
 
     # If refresh requested or cache stale, remove existing file
     if output_file.exists():
-        logger.info(f"♻️ Refresh requested or cache stale: removing {output_file}")
+        logger.info(f"♻️ Refresh requested or cache stale: removing %s", output_file)
         output_file.unlink()
 
     # Fetch data from Postgres
     logger.info("🕒 Fetching fresh data from Postgres...")
+    
+    engine = create_pg_engine()
+    
     query = "SELECT * FROM all_package_data_latest;"  # can be customized if needed
     df = pd.read_sql_query(query, engine)
 
@@ -45,6 +47,6 @@ def get_image_data(
 
     # Save CSV
     df.to_csv(output_file, index=False)
-    logger.info(f"✅ Saved {len(df)} rows to {output_file}")
+    logger.info("✅ Saved %d rows to %s", len(df), output_file)
 
     return output_file

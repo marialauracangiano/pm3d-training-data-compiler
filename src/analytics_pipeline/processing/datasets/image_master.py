@@ -17,24 +17,31 @@ def build_image_master(
     This function:
     - Retrieves image data from Postgres (with caching)
     - Loads it into a pandas DataFrame
-    - Acts as the public API for image-based datasets
+    - Applies image cleaning rules
+    - Returns the standardized image dataset
 
     Parameters
     ----------
     refresh : bool, default False
         If True, forces re-querying Postgres and rebuilding the CSV cache.
 
+    cleaning_config : dict
+        Image cleaning configuration.
+
     Returns
     -------
     pd.DataFrame
-        Image master dataframe
+        Standardized image master dataframe.
     """
     logger.info("Building image master dataset...")
 
     csv_path = get_image_data(refresh=refresh)
-    logger.info(f"Loading image data from {csv_path}")
+    logger.info("Loading image data from %s", csv_path)
 
+    # Load cached Postgres export
     df = pd.read_csv(csv_path, low_memory=False)
+    
+    # Apply protocol-independent cleaning rules
     df = clean_image_data(
         df,
         **cleaning_config,

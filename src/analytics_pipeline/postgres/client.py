@@ -1,8 +1,8 @@
 # src/analytics_pipeline/postgres/client.py
 
-from sqlalchemy.engine import Engine
-import pandas as pd
 
+import pandas as pd
+from sqlalchemy.engine import Engine
 from analytics_pipeline.postgres.engine import create_pg_engine
 from analytics_pipeline.config.logging_config import logger
 
@@ -32,7 +32,7 @@ def run_query(
             logger.debug("Created new Postgres engine for query execution.")
 
         df = pd.read_sql_query(sql, engine)
-        logger.info("Postgres query executed successfully.")
+        logger.info("Postgres query returned %d rows.", len(df))
 
         return df
 

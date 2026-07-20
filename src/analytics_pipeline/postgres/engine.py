@@ -13,12 +13,16 @@ def create_pg_engine() -> Engine:
     """
     try:
         config = get_db_config()
-
-        engine = create_engine(
-            f"postgresql+psycopg2://{config['user']}:{config['password']}"
-            f"@{config['host']}:{config['port']}/{config['database']}"
+        
+        connection_url = (
+            f"postgresql+psycopg2://"
+            f"{config['user']}:{config['password']}"
+            f"@{config['host']}:{config['port']}"
+            f"/{config['database']}"
             "?sslmode=require"
         )
+
+        engine = create_engine(connection_url)
 
         logger.debug("Postgres engine created.")
         return engine
@@ -40,8 +44,8 @@ def test_connection(engine: Engine) -> None:
         with engine.connect() as conn:
             conn.execute(text("SELECT 1"))
 
-        logger.info("✅ Postgres connection successful.")
+        logger.info("Postgres connection successful.")
 
     except Exception:
-        logger.exception("❌ Postgres connection failed.")
+        logger.exception("Postgres connection failed.")
         raise RuntimeError("Postgres connection failed")

@@ -1,5 +1,5 @@
 # src/analytics_pipeline/google_drive/manager.py
-# from datetime import datetime, timedelta
+
 from pathlib import Path
 import shutil
 
@@ -16,20 +16,24 @@ class DriveManager:
     Handles downloading files, caching folders, and converting spreadsheets to CSVs.
     """
 
-    def __init__(self, service=None):
+    def __init__(self, service=None) -> None:
         # Create and store the Drive service when the manager is created
         self.service = service or get_drive_service()
 
-    def download_folder(self, folder_id: str, output_folder: Path, ) -> Path:
+    def download_folder(
+        self, 
+        folder_id: str, 
+        output_folder: Path, 
+    ) -> Path:
         """
-        Download all spreadsheets from a Google Drive folder into: data/biomass/<output_name>
+        Download all spreadsheets from a Google Drive folder into a local directory.
 
         Parameters
         ----------
         folder_id : str
             Google Drive folder ID to download from.
-        output_name : str
-            Name of the local folder to save spreadsheets in.
+        output_folder : Path
+            Local destination directory.
 
         Returns
         -------
@@ -46,7 +50,7 @@ class DriveManager:
         # List spreadsheets
         # ----------------------------------------------------
         sheets = list_sheets_in_folder(folder_id, self.service)
-        logger.info(f"Found {len(sheets)} sheet(s). Downloading...")
+        logger.info("Found %d sheet(s). Downloading...", len(sheets))
 
         # ----------------------------------------------------
         # Download each sheet as CSV
@@ -55,7 +59,7 @@ class DriveManager:
             name = sheet["name"]
 
             if "template" in name.lower():
-                logger.info(f"Skipping template: {name}")
+                logger.info("Skipping template spreadsheet %s.", name)
                 continue
 
             download_sheet_as_csv(
@@ -66,5 +70,10 @@ class DriveManager:
                 drive_service=self.service,
             )
 
-        logger.info(f"✅ All sheets downloaded to {output_folder}")
+        logger.info(
+            "Downloaded %d spreadsheets to %s.", 
+            len(sheets),
+            output_folder,
+        )
+        
         return output_folder

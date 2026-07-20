@@ -14,22 +14,23 @@ def clean_biomass_data(
     drop_zero_weight: bool = True,
 ) -> pd.DataFrame:
     """
-    Clean and normalize biomass data in preparation for merging.
+    Clean and normalize biomass data into the standard biomass schema.
 
-    This function performs mechanical, reusable transformations only.
-    Project-specific meaning (mappings, column choices) must be provided
-    by the caller.
+    All protocol-specific behavior (column names, mappings, retained columns)
+    is supplied through the protocol configuration.
 
-    Steps:
-    - Extract affiliation from a source column
-    - Map affiliation values using provided mapping
-    - Rename columns
-    - Drop invalid biomass rows
+    Steps
+    -----
+    1. Extract affiliation
+    2. Map affiliation values
+    3. Rename columns
+    4. Keep required columns
+    5. Optionally remove zero-weight samples
     """
 
     logger.info("Starting biomass data cleaning")
-    df = df.copy()
     
+    df = df.copy()
     initial_rows = len(df)
 
     # ------------------------------------------------------------------
@@ -73,10 +74,15 @@ def clean_biomass_data(
 
         before = len(df)
         df = df[df["dry_weight_g"].notna() & (df["dry_weight_g"] != 0)]
-        logger.info(f"Dropped {before - len(df)} rows with zero/null dry weight")
+        logger.info(
+            "Dropped %d rows with zero/null dry weight",
+            before - len(df),
+        )
 
     logger.info(
-        f"Biomass cleaning complete: {initial_rows} → {len(df)} rows"
+        "Biomass cleaning complete: %d → %d rows",
+        initial_rows,
+        len(df),
     )
 
     return df

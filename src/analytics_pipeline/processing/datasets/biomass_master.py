@@ -1,6 +1,5 @@
 # src/analytics_pipeline/processing/datasets/biomass_master.py
 
-import numpy as np
 import pandas as pd
 from pathlib import Path
 from ..loaders.biomass_csv import load_biomass_folder
@@ -17,17 +16,23 @@ def build_biomass_master(
     cleaning_config: dict,
     ) -> pd.DataFrame:
     """
-    Given a dict mapping {year: folder_path}, load all biomass CSVs
-    and produce a combined dataset.
+    Build standardized biomass master dataset.
 
     Parameters
     ----------
-    folder_map : dict[int, str]
-        Example: {2024: "data/biomass_b4i_2024", 2025: "data/biomass_b4i_2025"}
+    folder_map : dict[int, Path]
+        Mapping of year to downloaded biomass folder.
+
+    biomass_config : dict
+        Protocol-specific biomass configuration.
+
+    cleaning_config : dict
+        Standard biomass cleaning parameters.
 
     Returns
     -------
     pd.DataFrame
+        Combined standardized biomass dataset.
     """
     if not folder_map:
         raise ValueError("folder_map is empty") 
@@ -36,8 +41,17 @@ def build_biomass_master(
 
     for year in sorted(folder_map):
         folder = folder_map[year]
+        
+        # Load raw biomass files
         df = load_biomass_folder(folder)
-        df = to_standard_biomass_format(df, biomass_config)
+        
+        # Convert protocol-specific formats to standard biomass format
+        df = to_standard_biomass_format(
+            df, 
+            biomass_config,
+        )
+        
+        # Apply common cleaning rules
         df = clean_biomass_data(
             df,
             **cleaning_config,
@@ -45,7 +59,7 @@ def build_biomass_master(
         
         df = df.loc[:, ~df.columns.duplicated()]
 
-        df["current_year"] = np.int64(year)
+        df["current_year"] = int(year)
         frames.append(df)
 
     return pd.concat(frames, ignore_index=True)
