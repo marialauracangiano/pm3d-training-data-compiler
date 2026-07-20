@@ -39,3 +39,8 @@ include = ["analytics_pipeline*"]
 [tool.black]
 line-length = 88
 target-version = ["py310"]
+
+[tool.ruff.lint.isort]
+known-first-party = [
+    "analytics_pipeline",
+]

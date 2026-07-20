@@ -32,7 +32,7 @@ def get_image_data(
 
     # If refresh requested or cache stale, remove existing file
     if output_file.exists():
-        logger.info(f"♻️ Refresh requested or cache stale: removing %s", output_file)
+        logger.info("♻️ Refresh requested or cache stale: removing %s", output_file)
         output_file.unlink()
 
     # Fetch data from Postgres
