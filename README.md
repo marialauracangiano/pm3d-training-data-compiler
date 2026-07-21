@@ -1,285 +1,1779 @@
-# Analytics Pipeline
+# PM3D Analytics Pipeline
 
-A data pipeline for building biomass, image, and calibration datasets, and generating reports.
-This project integrates data from **Google Drive** and **PostgreSQL**, standardizes it, and produces a merged dataset ready for analysis and reporting.
+A configurable Python pipeline for building calibration datasets that link **field biomass measurements** with **PlantMap3D image metadata**.
 
----
+The pipeline downloads biomass spreadsheets from Google Drive, retrieves image metadata from PostgreSQL, standardizes both datasets through protocol-specific YAML configurations, and produces model-ready calibration datasets for downstream machine learning and analysis.
 
-## 📌 What is this?
+The project is designed so that **adding a new prot# PM3D Analytics Pipeline
 
-This pipeline is designed to:
+A configurable Python pipeline for building calibration datasets that link **field biomass measurements** with **PlantMap3D image metadata**.
 
-- Ingest biomass data from Google Drive  
-- Ingest image metadata from PostgreSQL  
-- Clean and standardize datasets  
-- Merge datasets into a calibration dataset  
-- Generate reports  
+The pipeline downloads biomass spreadsheets from Google Drive, retrieves image metadata from PostgreSQL, standardizes both datasets through protocol-specific YAML configurations, and produces model-ready calibration datasets for downstream machine learning and analysis.
 
-💡 The pipeline is **fully configurable via YAML**, making it easy to reuse across datasets without modifying code.
+The project is designed so that **adding a new protocol typically requires only a new configuration file**, rather than modifying the processing code.
 
 ---
 
-## 🚀 Quick Start
+# Quick Start
 
-Run the full pipeline:
+Clone the repository
 
 ```bash
-python run_pipeline.py
+git clone <repository-url>
+cd pm3d-training-data-compiler
 ```
 
-Run individual steps:
+Install the project
 
 ```bash
-# 1. Build biomass dataset (from Google Drive)
-python scripts/build_biomass_master.py
+pip install -e ".[dev]"
+```
 
-# 2. Build image dataset (from PostgreSQL)
-python scripts/build_image_master.py
+Create a `.env` file (see the Environment Variables section below).
 
-# 3. Build calibration dataset
-python scripts/build_calibration_dataset.py
+Run the full pipeline
 
-# 4. Generate report
-python scripts/build_calibration_report.py
+```bash
+python run_pipeline.py all --protocol b4i
 ```
 
 ---
 
-## 🔄 Pipeline Overview
-
-The pipeline consists of four stages:
-
-1. **Biomass ingestion**
-
-   * Source: Google Drive
-   * Output: `data/processed/biomass_master.csv`
-
-2. **Image ingestion**
-
-   * Source: PostgreSQL
-   * Output: `data/processed/image_master.csv`
-
-3. **Dataset merge**
-
-   * Combines biomass + image datasets
-   * Output: `data/processed/calibration_dataset.csv`
-
-4. **Report generation**
-
-   * Output: `reports/calibration_report.html`
-
----
-
-## 📊 Data Flow Diagram
+# Architecture
 
 ```mermaid
 flowchart LR
 
-    A[Google Drive] --> B[Biomass Pipeline]
-    D[PostgreSQL] --> E[Image Pipeline]
+A[Google Drive] --> B[Download Biomass CSVs]
+B --> C[Biomass Processing]
 
-    B --> C[biomass_master.csv]
-    E --> F[image_master.csv]
+D[PostgreSQL] --> E[Retrieve Image Metadata]
+E --> F[Image Processing]
 
-    C --> G[Calibration Merge]
-    F --> G
+C --> G[Calibration Merge]
+F --> G
 
-    G --> H[calibration_dataset.csv]
-
-    H --> I[Report Generation]
-    I --> J[calibration_report.html]
+G --> H[Calibration Dataset]
+H --> I[Diagnostics (optional)]
 ```
-
-> ⚠️ If the diagram does not render in VS Code, install a Markdown Mermaid extension.
 
 ---
 
-## ⚡ Data Caching Behavior
+# Project Structure
 
-- Data is cached locally after first fetch
-- Cache is considered valid for 24 hours
-- Data will be re-fetched if:
-  - cache is older than 24 hours
-  - `--refresh` flag is used
+```text
+pm3d-training-data-compiler/
+│
+├── config/
+│   ├── pipeline.yaml
+│   ├── b4i.yaml
+│   └── calib_cover_crops.yaml
+│
+├── data/
+│   ├── raw/
+│   ├── processed/
+│   └── logs/
+│
+├── scripts/
+│   ├── build_biomass_master.py
+│   ├── build_image_master.py
+│   ├── build_calibration_dataset.py
+│   └── build_calibration_report.py      # Work in progress
+│
+├── src/
+│   └── analytics_pipeline/
+│       ├── config/
+│       ├── google_drive/
+│       │   ├── auth.py
+│       │   ├── client.py
+│       │   └── manager.py
+│       │
+│       ├── postgres/
+│       │   ├── client.py
+│       │   ├── datasets.py
+│       │   └── engine.py
+│       │
+│       ├── processing/
+│       │   ├── acquisition/
+│       │   ├── adapters/
+│       │   ├── datasets/
+│       │   ├── loaders/
+│       │   ├── schema/
+│       │   │   ├── biomass_schema.py
+│       │   │   └── validate.py
+│       │   └── transforms/
+│       │
+│       ├── config/
+│       └── paths.py
+│
+├── tests/
+│
+├── run_pipeline.py
+├── pyproject.toml
+└── README.md
+```
 
-To force fresh data:
+---
+
+# Features
+
+- Download biomass spreadsheets from Google Drive
+- Retrieve image metadata from PostgreSQL
+- Configurable protocol-specific processing
+- Automatic cache management
+- Standardized calibration datasets
+- Optional reconciliation diagnostics
+- Unit tests with `pytest`
+- Automatic code formatting with `black`
+- Static analysis with `ruff`
+
+---
+
+# Requirements
+
+- Python 3.10+
+- PostgreSQL database access
+- Google Drive API credentials
+- Access to the required PM3D Google Drive folders
+
+---
+
+# Installation
+
+Clone the repository
 
 ```bash
-python scripts/build_biomass_master.py --refresh
-python scripts/build_image_master.py --refresh
+git clone <repository-url>
+cd pm3d-training-data-compiler
 ```
----
 
-## ⚙️ Configuration (YAML-driven)
-
-All pipeline behavior is controlled via YAML files:
-
-```
-config/
-  biomass.yaml
-  image.yaml
-  calibration.yaml
-```
----
-
-## 🔐 Environment Setup
-
-### 1. Create Python environment (Conda)
+Install the project
 
 ```bash
-conda create -n analytics-pipeline python=3.10
-conda activate analytics-pipeline
-
-# Install project and dependencies
 pip install -e .
 ```
-### 2. Create a `.env` file in the project root
 
-This project relies on environment variables for external services.
+Install development tools
 
-```env
-# ----------------------------
-# Google Drive
-# ----------------------------
-GOOGLE_CREDENTIALS_PATH=path/to/credentials.json
-GOOGLE_TOKEN_PATH=path/to/token.json
-GOOGLE_DRIVE_BIOMASS_2024_FOLDER_ID=your_folder_id
-GOOGLE_DRIVE_BIOMASS_2025_FOLDER_ID=your_folder_id
+```bash
+pip install -e ".[dev]"
+```
 
-# ----------------------------
-# PostgreSQL
-# ----------------------------
-DB_USER=your_user
-DB_PASS=your_password
-DB_HOST=your_host
+---
+
+# Environment Variables
+
+Create a `.env` file in the project root.
+
+Example:
+
+```text
+GOOGLE_CREDENTIALS_PATH=credentials/google_credentials.json
+GOOGLE_TOKEN_PATH=credentials/google_token.json
+
+DB_USER=my_username
+DB_PASS=my_password
+DB_HOST=my_database_host
 DB_PORT=5432
-DB_NAME=your_database
-
-# ----------------------------
-# Confluence (optional)
-# ----------------------------
-CONFLUENCE_URL=https://your-domain.atlassian.net
-CONFLUENCE_USERNAME=your_email
-CONFLUENCE_API_TOKEN=your_token
-
-# ----------------------------
-# Environment
-# ----------------------------
-ENV=development
+DB_NAME=my_database
 ```
 
 ---
 
-## 📦 Pipeline Steps
+# Google Authentication
 
-### 🌿 Biomass Dataset
+The first execution will open a browser window requesting authorization to access Google Drive.
+
+After authentication, a token is stored locally and automatically reused in future executions.
+
+---
+
+# Configuration
+
+Pipeline behavior is controlled through the YAML files inside the `config/` directory.
+
+```text
+config/
+    pipeline.yaml
+    b4i.yaml
+    calib_cover_crops.yaml
+```
+
+These files define:
+
+- biomass years
+- image filters
+- column mappings
+- plot ID generation
+- merge keys
+- output configuration
+
+Most new protocols can be supported by creating a new YAML configuration file without changing the processing code.
+
+---
+
+# Running the Pipeline
+
+Run the complete pipeline
 
 ```bash
-python scripts/build_biomass_master.py [--refresh]
+python run_pipeline.py all --protocol b4i
 ```
 
-* Downloads biomass CSVs from Google Drive
-* Cleans and standardizes data using `biomass.yaml`
-
-**Output:**
-`data/processed/biomass_master.csv`
-
----
-
-### 🖼️ Image Dataset
+Build only the biomass dataset
 
 ```bash
-python scripts/build_image_master.py [--refresh]
+python run_pipeline.py biomass --protocol b4i
 ```
 
-* Queries image data from PostgreSQL
-* Filters and cleans records using `image.yaml`
-
-**Output:**
-`data/processed/image_master.csv`
-
----
-
-### 🔗 Calibration Dataset
+Build only the image dataset
 
 ```bash
-python scripts/build_calibration_dataset.py [--diagnostics]
+python run_pipeline.py image
 ```
 
-- Merges datasets using keys defined in `calibration.yaml`  
-- Outputs merged dataset  
-
-**Output:**
-`data/processed/calibration_dataset.csv`
-
-**Diagnostics (optional):**
-`data/processed/diagnostics/`
-
----
-
-### 📊 Report Generation
+Build the calibration dataset
 
 ```bash
-python scripts/build_calibration_report.py
+python run_pipeline.py calibration --protocol b4i
 ```
 
-**Output:**
-`reports/calibration_report.html`
+Force a fresh download
+
+```bash
+python run_pipeline.py all --protocol b4i --refresh
+```
+
+Generate reconciliation diagnostics
+
+```bash
+python run_pipeline.py calibration --protocol b4i --diagnostics
+```
 
 ---
 
-## 📂 Project Structure
+# Outputs
 
-```
-config/                 # YAML configuration files
+The pipeline creates the following structure:
 
+```text
 data/
-  raw/                  # Raw input data
-  processed/            # Generated datasets
-  logs/                 # Logs
-
-scripts/                # CLI entry points (pipeline steps)
-
-src/analytics_pipeline/
-  config/               # Env loading, logging, validation
-  google_drive/         # Drive integration
-  postgres/             # Database integration
-  processing/           # Core pipeline logic
-
-reports/                # Output reports
+├── raw/
+│
+├── processed/
+│   └── <PROTOCOL>/
+│       ├── biomass_master.csv
+│       ├── image_master.csv
+│       ├── calibration_dataset.csv
+│       └── diagnostics/
+│
+└── logs/
 ```
 
----
+Diagnostic outputs include:
 
-## ⚠️ Important Notes
-
-* Requires access to:
-
-  * Google Drive (biomass data)
-  * PostgreSQL database (image data)
-
-* Column names must match across datasets for merging
-
-* Cached data is reused unless `--refresh` is specified
-
-* Output folders are created automatically if missing
+- calibration reconciliation
+- mismatch summary
+- coverage by affiliation
+- coverage by year and affiliation
 
 ---
 
-## 🧠 Troubleshooting
+# Running Tests
 
-If merge results look incorrect, rerun with diagnostics:
+Run the complete test suite
 
 ```bash
-python scripts/build_calibration_dataset.py --diagnostics
+pytest
 ```
 
-This will generate diagnostic files to inspect mismatches.
+Run an individual test
+
+```bash
+pytest tests/test_plot_id.py
+```
 
 ---
 
-## 🚀 Future Improvements
+# Code Quality
 
-- Push filtering to database queries (performance optimization)  
-- The build_calibration_report.py script is still a work in progress
+Format the project
+
+```bash
+black .
+```
+
+Run static analysis
+
+```bash
+ruff check .
+```
+
 ---
+
+# Adding a New Protocol
+
+Adding support for a new protocol typically consists of:
+
+1. Creating a new protocol YAML file.
+2. Defining biomass years.
+3. Configuring column mappings.
+4. Configuring plot ID generation.
+5. Configuring image filters.
+6. Running the pipeline.
+
+For most protocols, no changes to the processing code are required.
+
+---
+
+# Future Work
+
+Planned improvements include:
+
+- HTML calibration report generation (`build_calibration_report.py`)
+- Additional protocol adapters
+- End-to-end integration tests
+- GitHub Actions CI
+- Automated documentation generation
+
+---
+
+# Development Tools
+
+This project uses:
+
+- pandas
+- SQLAlchemy
+- Google Drive API
+- pytest
+- black
+- ruff
+
+---
+
+# License
+
+Internal project developed for the PlantMap3D analytics pipeline.# PM3D Analytics Pipeline
+
+A configurable Python pipeline for building calibration datasets that link **field biomass measurements** with **PlantMap3D image metadata**.
+
+The pipeline downloads biomass spreadsheets from Google Drive, retrieves image metadata from PostgreSQL, standardizes both datasets through protocol-specific YAML configurations, and produces model-ready calibration datasets for downstream machine learning and analysis.
+
+The project is designed so that **adding a new protocol typically requires only a new configuration file**, rather than modifying the processing code.
+
+---
+
+# Quick Start
+
+Clone the repository
+
+```bash
+git clone <repository-url>
+cd pm3d-training-data-compiler
+```
+
+Install the project
+
+```bash
+pip install -e ".[dev]"
+```
+
+Create a `.env` file (see the Environment Variables section below).
+
+Run the full pipeline
+
+```bash
+python run_pipeline.py all --protocol b4i
+```
+
+---
+
+# Architecture
+
+```mermaid
+flowchart LR
+
+A[Google Drive] --> B[Download Biomass CSVs]
+B --> C[Biomass Processing]
+
+D[PostgreSQL] --> E[Retrieve Image Metadata]
+E --> F[Image Processing]
+
+C --> G[Calibration Merge]
+F --> G
+
+G --> H[Calibration Dataset]
+H --> I[Diagnostics (optional)]
+```
+
+---
+
+# Project Structure
+
+```text
+pm3d-training-data-compiler/
+│
+├── config/
+│   ├── pipeline.yaml
+│   ├── b4i.yaml
+│   └── calib_cover_crops.yaml
+│
+├── data/
+│   ├── raw/
+│   ├── processed/
+│   └── logs/
+│
+├── scripts/
+│   ├── build_biomass_master.py
+│   ├── build_image_master.py
+│   ├── build_calibration_dataset.py
+│   └── build_calibration_report.py      # Work in progress
+│
+├── src/
+│   └── analytics_pipeline/
+│       ├── config/
+│       ├── google_drive/
+│       │   ├── auth.py
+│       │   ├── client.py
+│       │   └── manager.py
+│       │
+│       ├── postgres/
+│       │   ├── client.py
+│       │   ├── datasets.py
+│       │   └── engine.py
+│       │
+│       ├── processing/
+│       │   ├── acquisition/
+│       │   ├── adapters/
+│       │   ├── datasets/
+│       │   ├── loaders/
+│       │   ├── schema/
+│       │   │   ├── biomass_schema.py
+│       │   │   └── validate.py
+│       │   └── transforms/
+│       │
+│       ├── config/
+│       └── paths.py
+│
+├── tests/
+│
+├── run_pipeline.py
+├── pyproject.toml
+└── README.md
+```
+
+---
+
+# Features
+
+- Download biomass spreadsheets from Google Drive
+- Retrieve image metadata from PostgreSQL
+- Configurable protocol-specific processing
+- Automatic cache management
+- Standardized calibration datasets
+- Optional reconciliation diagnostics
+- Unit tests with `pytest`
+- Automatic code formatting with `black`
+- Static analysis with `ruff`
+
+---
+
+# Requirements
+
+- Python 3.10+
+- PostgreSQL database access
+- Google Drive API credentials
+- Access to the required PM3D Google Drive folders
+
+---
+
+# Installation
+
+Clone the repository
+
+```bash
+git clone <repository-url>
+cd pm3d-training-data-compiler
+```
+
+Install the project
+
+```bash
+pip install -e .
+```
+
+Install development tools
+
+```bash
+pip install -e ".[dev]"
+```
+
+---
+
+# Environment Variables
+
+Create a `.env` file in the project root.
+
+Example:
+
+```text
+GOOGLE_CREDENTIALS_PATH=credentials/google_credentials.json
+GOOGLE_TOKEN_PATH=credentials/google_token.json
+
+DB_USER=my_username
+DB_PASS=my_password
+DB_HOST=my_database_host
+DB_PORT=5432
+DB_NAME=my_database
+```
+
+---
+
+# Google Authentication
+
+The first execution will open a browser window requesting authorization to access Google Drive.
+
+After authentication, a token is stored locally and automatically reused in future executions.
+
+---
+
+# Configuration
+
+Pipeline behavior is controlled through the YAML files inside the `config/` directory.
+
+```text
+config/
+    pipeline.yaml
+    b4i.yaml
+    calib_cover_crops.yaml
+```
+
+These files define:
+
+- biomass years
+- image filters
+- column mappings
+- plot ID generation
+- merge keys
+- output configuration
+
+Most new protocols can be supported by creating a new YAML configuration file without changing the processing code.
+
+---
+
+# Running the Pipeline
+
+Run the complete pipeline
+
+```bash
+python run_pipeline.py all --protocol b4i
+```
+
+Build only the biomass dataset
+
+```bash
+python run_pipeline.py biomass --protocol b4i
+```
+
+Build only the image dataset
+
+```bash
+python run_pipeline.py image
+```
+
+Build the calibration dataset
+
+```bash
+python run_pipeline.py calibration --protocol b4i
+```
+
+Force a fresh download
+
+```bash
+python run_pipeline.py all --protocol b4i --refresh
+```
+
+Generate reconciliation diagnostics
+
+```bash
+python run_pipeline.py calibration --protocol b4i --diagnostics
+```
+
+---
+
+# Outputs
+
+The pipeline creates the following structure:
+
+```text
+data/
+├── raw/
+│
+├── processed/
+│   └── <PROTOCOL>/
+│       ├── biomass_master.csv
+│       ├── image_master.csv
+│       ├── calibration_dataset.csv
+│       └── diagnostics/
+│
+└── logs/
+```
+
+Diagnostic outputs include:
+
+- calibration reconciliation
+- mismatch summary
+- coverage by affiliation
+- coverage by year and affiliation
+
+---
+
+# Running Tests
+
+Run the complete test suite
+
+```bash
+pytest
+```
+
+Run an individual test
+
+```bash
+pytest tests/test_plot_id.py
+```
+
+---
+
+# Code Quality
+
+Format the project
+
+```bash
+black .
+```
+
+Run static analysis
+
+```bash
+ruff check .
+```
+
+---
+
+# Adding a New Protocol
+
+Adding support for a new protocol typically consists of:
+
+1. Creating a new protocol YAML file.
+2. Defining biomass years.
+3. Configuring column mappings.
+4. Configuring plot ID generation.
+5. Configuring image filters.
+6. Running the pipeline.
+
+For most protocols, no changes to the processing code are required.
+
+---
+
+# Future Work
+
+Planned improvements include:
+
+- HTML calibration report generation (`build_calibration_report.py`)
+- Additional protocol adapters
+- End-to-end integration tests
+- GitHub Actions CI
+- Automated documentation generation
+
+---
+
+# Development Tools
+
+This project uses:
+
+- pandas
+- SQLAlchemy
+- Google Drive API
+- pytest
+- black
+- ruff
+
+---
+
+# License
+
+Internal project developed for the PlantMap3D analytics pipeline.# PM3D Analytics Pipeline
+
+A configurable Python pipeline for building calibration datasets that link **field biomass measurements** with **PlantMap3D image metadata**.
+
+The pipeline downloads biomass spreadsheets from Google Drive, retrieves image metadata from PostgreSQL, standardizes both datasets through protocol-specific YAML configurations, and produces model-ready calibration datasets for downstream machine learning and analysis.
+
+The project is designed so that **adding a new protocol typically requires only a new configuration file**, rather than modifying the processing code.
+
+---
+
+# Quick Start
+
+Clone the repository
+
+```bash
+git clone <repository-url>
+cd pm3d-training-data-compiler
+```
+
+Install the project
+
+```bash
+pip install -e ".[dev]"
+```
+
+Create a `.env` file (see the Environment Variables section below).
+
+Run the full pipeline
+
+```bash
+python run_pipeline.py all --protocol b4i
+```
+
+---
+
+# Architecture
+
+```mermaid
+flowchart LR
+
+A[Google Drive] --> B[Download Biomass CSVs]
+B --> C[Biomass Processing]
+
+D[PostgreSQL] --> E[Retrieve Image Metadata]
+E --> F[Image Processing]
+
+C --> G[Calibration Merge]
+F --> G
+
+G --> H[Calibration Dataset]
+H --> I[Diagnostics (optional)]
+```
+
+---
+
+# Project Structure
+
+```text
+pm3d-training-data-compiler/
+│
+├── config/
+│   ├── pipeline.yaml
+│   ├── b4i.yaml
+│   └── calib_cover_crops.yaml
+│
+├── data/
+│   ├── raw/
+│   ├── processed/
+│   └── logs/
+│
+├── scripts/
+│   ├── build_biomass_master.py
+│   ├── build_image_master.py
+│   ├── build_calibration_dataset.py
+│   └── build_calibration_report.py      # Work in progress
+│
+├── src/
+│   └── analytics_pipeline/
+│       ├── config/
+│       ├── google_drive/
+│       │   ├── auth.py
+│       │   ├── client.py
+│       │   └── manager.py
+│       │
+│       ├── postgres/
+│       │   ├── client.py
+│       │   ├── datasets.py
+│       │   └── engine.py
+│       │
+│       ├── processing/
+│       │   ├── acquisition/
+│       │   ├── adapters/
+│       │   ├── datasets/
+│       │   ├── loaders/
+│       │   ├── schema/
+│       │   │   ├── biomass_schema.py
+│       │   │   └── validate.py
+│       │   └── transforms/
+│       │
+│       ├── config/
+│       └── paths.py
+│
+├── tests/
+│
+├── run_pipeline.py
+├── pyproject.toml
+└── README.md
+```
+
+---
+
+# Pipeline Architecture
+
+The pipeline is organized into small, single-purpose modules. Data acquisition, loading, transformation, validation, and dataset assembly are separated so that new protocols can usually be added through configuration rather than code changes.
+
+```mermaid
+flowchart TD
+
+CFG[Configuration YAML]
+
+RUN[run_pipeline.py]
+
+RUN --> ACQ[Acquisition]
+RUN --> LOAD[Loaders]
+RUN --> TRANS[Transforms]
+RUN --> VALID[Validation]
+RUN --> DATA[Datasets]
+
+CFG --> TRANS
+CFG --> VALID
+
+ACQ --> DRIVE[Google Drive]
+ACQ --> DB[PostgreSQL]
+
+LOAD --> TRANS
+TRANS --> VALID
+VALID --> DATA
+
+DATA --> BM[Biomass Master]
+DATA --> IM[Image Master]
+DATA --> CAL[Calibration Dataset]
+```
+---
+
+# Features
+
+- Download biomass spreadsheets from Google Drive
+- Retrieve image metadata from PostgreSQL
+- Configurable protocol-specific processing
+- Automatic cache management
+- Standardized calibration datasets
+- Optional reconciliation diagnostics
+- Unit tests with `pytest`
+- Automatic code formatting with `black`
+- Static analysis with `ruff`
+
+---
+
+# Requirements
+
+- Python 3.10+
+- PostgreSQL database access
+- Google Drive API credentials
+- Access to the required PM3D Google Drive folders
+
+---
+
+# Installation
+
+Clone the repository
+
+```bash
+git clone <repository-url>
+cd pm3d-training-data-compiler
+```
+
+Install the project
+
+```bash
+pip install -e .
+```
+
+Install development tools
+
+```bash
+pip install -e ".[dev]"
+```
+
+---
+
+# Environment Variables
+
+Create a `.env` file in the project root.
+
+Example:
+
+```text
+GOOGLE_CREDENTIALS_PATH=credentials/google_credentials.json
+GOOGLE_TOKEN_PATH=credentials/google_token.json
+
+DB_USER=my_username
+DB_PASS=my_password
+DB_HOST=my_database_host
+DB_PORT=5432
+DB_NAME=my_database
+```
+
+---
+
+# Google Authentication
+
+The first execution will open a browser window requesting authorization to access Google Drive.
+
+After authentication, a token is stored locally and automatically reused in future executions.
+
+---
+
+# Configuration
+
+Pipeline behavior is controlled through the YAML files inside the `config/` directory.
+
+```text
+config/
+    pipeline.yaml
+    b4i.yaml
+    calib_cover_crops.yaml
+```
+
+These files define:
+
+- biomass years
+- image filters
+- column mappings
+- plot ID generation
+- merge keys
+- output configuration
+
+Most new protocols can be supported by creating a new YAML configuration file without changing the processing code.
+
+---
+
+# Running the Pipeline
+
+Run the complete pipeline
+
+```bash
+python run_pipeline.py all --protocol b4i
+```
+
+Build only the biomass dataset
+
+```bash
+python run_pipeline.py biomass --protocol b4i
+```
+
+Build only the image dataset
+
+```bash
+python run_pipeline.py image
+```
+
+Build the calibration dataset
+
+```bash
+python run_pipeline.py calibration --protocol b4i
+```
+
+Force a fresh download
+
+```bash
+python run_pipeline.py all --protocol b4i --refresh
+```
+
+Generate reconciliation diagnostics
+
+```bash
+python run_pipeline.py calibration --protocol b4i --diagnostics
+```
+
+---
+
+# Outputs
+
+The pipeline creates the following structure:
+
+```text
+data/
+├── raw/
+│
+├── processed/
+│   └── <PROTOCOL>/
+│       ├── biomass_master.csv
+│       ├── image_master.csv
+│       ├── calibration_dataset.csv
+│       └── diagnostics/
+│
+└── logs/
+```
+
+Diagnostic outputs include:
+
+- calibration reconciliation
+- mismatch summary
+- coverage by affiliation
+- coverage by year and affiliation
+
+---
+
+# Running Tests
+
+Run the complete test suite
+
+```bash
+pytest
+```
+
+Run an individual test
+
+```bash
+pytest tests/test_plot_id.py
+```
+
+---
+
+# Code Quality
+
+Format the project
+
+```bash
+black .
+```
+
+Run static analysis
+
+```bash
+ruff check .
+```
+
+---
+
+# Adding a New Protocol
+
+Adding support for a new protocol typically consists of:
+
+1. Creating a new protocol YAML file.
+2. Defining biomass years.
+3. Configuring column mappings.
+4. Configuring plot ID generation.
+5. Configuring image filters.
+6. Running the pipeline.
+
+For most protocols, no changes to the processing code are required.
+
+---
+
+# Future Work
+
+Planned improvements include:
+
+- HTML calibration report generation (`build_calibration_report.py`)
+- Additional protocol adapters
+- End-to-end integration tests
+- GitHub Actions CI
+- Automated documentation generation
+
+---
+
+# Development Tools
+
+This project uses:
+
+- pandas
+- SQLAlchemy
+- Google Drive API
+- pytest
+- black
+- ruff
+
+---
+
+# License
+
+Internal project developed for the PlantMap3D analytics pipeline.# PM3D Analytics Pipeline
+
+A configurable Python pipeline for building calibration datasets that link **field biomass measurements** with **PlantMap3D image metadata**.
+
+The pipeline downloads biomass spreadsheets from Google Drive, retrieves image metadata from PostgreSQL, standardizes both datasets through protocol-specific YAML configurations, and produces model-ready calibration datasets for downstream machine learning and analysis.
+
+The project is designed so that **adding a new protocol typically requires only a new configuration file**, rather than modifying the processing code.
+
+---
+
+# Quick Start
+
+Clone the repository
+
+```bash
+git clone <repository-url>
+cd pm3d-training-data-compiler
+```
+
+Install the project
+
+```bash
+pip install -e ".[dev]"
+```
+
+Create a `.env` file (see the Environment Variables section below).
+
+Run the full pipeline
+
+```bash
+python run_pipeline.py all --protocol b4i
+```
+
+---
+
+# Architecture
+
+```mermaid
+flowchart LR
+
+A[Google Drive] --> B[Download Biomass CSVs]
+B --> C[Biomass Processing]
+
+D[PostgreSQL] --> E[Retrieve Image Metadata]
+E --> F[Image Processing]
+
+C --> G[Calibration Merge]
+F --> G
+
+G --> H[Calibration Dataset]
+H --> I[Optional Diagnostics]
+```
+
+---
+
+# Project Structure
+
+```text
+pm3d-training-data-compiler/
+│
+├── config/
+│   ├── pipeline.yaml
+│   ├── b4i.yaml
+│   └── calib_cover_crops.yaml
+│
+├── data/
+│   ├── raw/
+│   ├── processed/
+│   └── logs/
+│
+├── scripts/
+│   ├── build_biomass_master.py
+│   ├── build_image_master.py
+│   ├── build_calibration_dataset.py
+│   └── build_calibration_report.py      # Work in progress
+│
+├── src/
+│   └── analytics_pipeline/
+│       ├── config/
+│       ├── google_drive/
+│       │   ├── auth.py
+│       │   ├── client.py
+│       │   └── manager.py
+│       │
+│       ├── postgres/
+│       │   ├── client.py
+│       │   ├── datasets.py
+│       │   └── engine.py
+│       │
+│       ├── processing/
+│       │   ├── acquisition/
+│       │   ├── adapters/
+│       │   ├── datasets/
+│       │   ├── loaders/
+│       │   ├── schema/
+│       │   │   ├── biomass_schema.py
+│       │   │   └── validate.py
+│       │   └── transforms/
+│       │
+│       ├── config/
+│       └── paths.py
+│
+├── tests/
+│
+├── run_pipeline.py
+├── pyproject.toml
+└── README.md
+```
+
+---
+
+# Features
+
+- Download biomass spreadsheets from Google Drive
+- Retrieve image metadata from PostgreSQL
+- Configurable protocol-specific processing
+- Automatic cache management
+- Standardized calibration datasets
+- Optional reconciliation diagnostics
+- Unit tests with `pytest`
+- Automatic code formatting with `black`
+- Static analysis with `ruff`
+
+---
+
+# Requirements
+
+- Python 3.10+
+- PostgreSQL database access
+- Google Drive API credentials
+- Access to the required PM3D Google Drive folders
+
+---
+
+# Installation
+
+Clone the repository
+
+```bash
+git clone <repository-url>
+cd pm3d-training-data-compiler
+```
+
+Install the project
+
+```bash
+pip install -e .
+```
+
+Install development tools
+
+```bash
+pip install -e ".[dev]"
+```
+
+---
+
+# Environment Variables
+
+Create a `.env` file in the project root.
+
+Example:
+
+```text
+GOOGLE_CREDENTIALS_PATH=credentials/google_credentials.json
+GOOGLE_TOKEN_PATH=credentials/google_token.json
+
+DB_USER=my_username
+DB_PASS=my_password
+DB_HOST=my_database_host
+DB_PORT=5432
+DB_NAME=my_database
+```
+
+---
+
+# Google Authentication
+
+The first execution will open a browser window requesting authorization to access Google Drive.
+
+After authentication, a token is stored locally and automatically reused in future executions.
+
+---
+
+# Configuration
+
+Pipeline behavior is controlled through the YAML files inside the `config/` directory.
+
+```text
+config/
+    pipeline.yaml
+    b4i.yaml
+    calib_cover_crops.yaml
+```
+
+These files define:
+
+- biomass years
+- image filters
+- column mappings
+- plot ID generation
+- merge keys
+- output configuration
+
+Most new protocols can be supported by creating a new YAML configuration file without changing the processing code.
+
+---
+
+# Running the Pipeline
+
+Run the complete pipeline
+
+```bash
+python run_pipeline.py all --protocol b4i
+```
+
+Build only the biomass dataset
+
+```bash
+python run_pipeline.py biomass --protocol b4i
+```
+
+Build only the image dataset
+
+```bash
+python run_pipeline.py image
+```
+
+Build the calibration dataset
+
+```bash
+python run_pipeline.py calibration --protocol b4i
+```
+
+Force a fresh download
+
+```bash
+python run_pipeline.py all --protocol b4i --refresh
+```
+
+Generate reconciliation diagnostics
+
+```bash
+python run_pipeline.py calibration --protocol b4i --diagnostics
+```
+
+---
+
+# Outputs
+
+The pipeline creates the following structure:
+
+```text
+data/
+├── raw/
+│
+├── processed/
+│   └── <PROTOCOL>/
+│       ├── biomass_master.csv
+│       ├── image_master.csv
+│       ├── calibration_dataset.csv
+│       └── diagnostics/
+│
+└── logs/
+```
+
+Diagnostic outputs include:
+
+- calibration reconciliation
+- mismatch summary
+- coverage by affiliation
+- coverage by year and affiliation
+
+---
+
+# Running Tests
+
+Run the complete test suite
+
+```bash
+pytest
+```
+
+Run an individual test
+
+```bash
+pytest tests/test_plot_id.py
+```
+
+---
+
+# Code Quality
+
+Format the project
+
+```bash
+black .
+```
+
+Run static analysis
+
+```bash
+ruff check .
+```
+
+---
+
+# Adding a New Protocol
+
+Adding support for a new protocol typically consists of:
+
+1. Creating a new protocol YAML file.
+2. Defining biomass years.
+3. Configuring column mappings.
+4. Configuring plot ID generation.
+5. Configuring image filters.
+6. Running the pipeline.
+
+For most protocols, no changes to the processing code are required.
+
+---
+
+# Future Work
+
+Planned improvements include:
+
+- HTML calibration report generation (`build_calibration_report.py`)
+- Additional protocol adapters
+- End-to-end integration tests
+- GitHub Actions CI
+- Automated documentation generation
+
+---
+
+# Development Tools
+
+This project uses:
+
+- pandas
+- SQLAlchemy
+- Google Drive API
+- pytest
+- black
+- ruff
+
+---
+
+# License
+
+Internal project developed for the PlantMap3D analytics pipeline.ocol typically requires only a new configuration file**, rather than modifying the processing code.
+
+---
+
+# Quick Start
+
+Clone the repository
+
+```bash
+git clone <repository-url>
+cd pm3d-training-data-compiler
+```
+
+Install the project
+
+```bash
+pip install -e ".[dev]"
+```
+
+Create a `.env` file (see the Environment Variables section below).
+
+Run the full pipeline
+
+```bash
+python run_pipeline.py all --protocol b4i
+```
+
+---
+
+# Architecture
+
+```mermaid
+flowchart LR
+
+A[Google Drive] --> B[Download Biomass CSVs]
+B --> C[Biomass Processing]
+
+D[PostgreSQL] --> E[Retrieve Image Metadata]
+E --> F[Image Processing]
+
+C --> G[Calibration Merge]
+F --> G
+
+G --> H[Calibration Dataset]
+H --> I[Diagnostics (optional)]
+```
+
+---
+
+# Project Structure
+
+```text
+pm3d-training-data-compiler/
+│
+├── config/
+│   ├── pipeline.yaml
+│   ├── b4i.yaml
+│   └── calib_cover_crops.yaml
+│
+├── data/
+│   ├── raw/
+│   ├── processed/
+│   └── logs/
+│
+├── scripts/
+│   ├── build_biomass_master.py
+│   ├── build_image_master.py
+│   ├── build_calibration_dataset.py
+│   └── build_calibration_report.py      # Work in progress
+│
+├── src/
+│   └── analytics_pipeline/
+│       ├── config/
+│       ├── google_drive/
+│       │   ├── auth.py
+│       │   ├── client.py
+│       │   └── manager.py
+│       │
+│       ├── postgres/
+│       │   ├── client.py
+│       │   ├── datasets.py
+│       │   └── engine.py
+│       │
+│       ├── processing/
+│       │   ├── acquisition/
+│       │   ├── adapters/
+│       │   ├── datasets/
+│       │   ├── loaders/
+│       │   ├── schema/
+│       │   │   ├── biomass_schema.py
+│       │   │   └── validate.py
+│       │   └── transforms/
+│       │
+│       ├── config/
+│       └── paths.py
+│
+├── tests/
+│
+├── run_pipeline.py
+├── pyproject.toml
+└── README.md
+```
+
+---
+
+# Features
+
+- Download biomass spreadsheets from Google Drive
+- Retrieve image metadata from PostgreSQL
+- Configurable protocol-specific processing
+- Automatic cache management
+- Standardized calibration datasets
+- Optional reconciliation diagnostics
+- Unit tests with `pytest`
+- Automatic code formatting with `black`
+- Static analysis with `ruff`
+
+---
+
+# Requirements
+
+- Python 3.10+
+- PostgreSQL database access
+- Google Drive API credentials
+- Access to the required PM3D Google Drive folders
+
+---
+
+# Installation
+
+Clone the repository
+
+```bash
+git clone <repository-url>
+cd pm3d-training-data-compiler
+```
+
+Install the project
+
+```bash
+pip install -e .
+```
+
+Install development tools
+
+```bash
+pip install -e ".[dev]"
+```
+
+---
+
+# Environment Variables
+
+Create a `.env` file in the project root.
+
+Example:
+
+```text
+GOOGLE_CREDENTIALS_PATH=credentials/google_credentials.json
+GOOGLE_TOKEN_PATH=credentials/google_token.json
+
+DB_USER=my_username
+DB_PASS=my_password
+DB_HOST=my_database_host
+DB_PORT=5432
+DB_NAME=my_database
+```
+
+---
+
+# Google Authentication
+
+The first execution will open a browser window requesting authorization to access Google Drive.
+
+After authentication, a token is stored locally and automatically reused in future executions.
+
+---
+
+# Configuration
+
+Pipeline behavior is controlled through the YAML files inside the `config/` directory.
+
+```text
+config/
+    pipeline.yaml
+    b4i.yaml
+    calib_cover_crops.yaml
+```
+
+These files define:
+
+- biomass years
+- image filters
+- column mappings
+- plot ID generation
+- merge keys
+- output configuration
+
+Most new protocols can be supported by creating a new YAML configuration file without changing the processing code.
+
+---
+
+# Running the Pipeline
+
+Run the complete pipeline
+
+```bash
+python run_pipeline.py all --protocol b4i
+```
+
+Build only the biomass dataset
+
+```bash
+python run_pipeline.py biomass --protocol b4i
+```
+
+Build only the image dataset
+
+```bash
+python run_pipeline.py image
+```
+
+Build the calibration dataset
+
+```bash
+python run_pipeline.py calibration --protocol b4i
+```
+
+Force a fresh download
+
+```bash
+python run_pipeline.py all --protocol b4i --refresh
+```
+
+Generate reconciliation diagnostics
+
+```bash
+python run_pipeline.py calibration --protocol b4i --diagnostics
+```
+
+---
+
+# Outputs
+
+The pipeline creates the following structure:
+
+```text
+data/
+├── raw/
+│
+├── processed/
+│   └── <PROTOCOL>/
+│       ├── biomass_master.csv
+│       ├── image_master.csv
+│       ├── calibration_dataset.csv
+│       └── diagnostics/
+│
+└── logs/
+```
+
+Diagnostic outputs include:
+
+- calibration reconciliation
+- mismatch summary
+- coverage by affiliation
+- coverage by year and affiliation
+
+---
+
+# Running Tests
+
+Run the complete test suite
+
+```bash
+pytest
+```
+
+Run an individual test
+
+```bash
+pytest tests/test_plot_id.py
+```
+
+---
+
+# Code Quality
+
+Format the project
+
+```bash
+black .
+```
+
+Run static analysis
+
+```bash
+ruff check .
+```
+
+---
+
+# Adding a New Protocol
+
+Adding support for a new protocol typically consists of:
+
+1. Creating a new protocol YAML file.
+2. Defining biomass years.
+3. Configuring column mappings.
+4. Configuring plot ID generation.
+5. Configuring image filters.
+6. Running the pipeline.
+
+For most protocols, no changes to the processing code are required.
+
+---
+
+# Future Work
+
+Planned improvements include:
+
+- HTML calibration report generation (`build_calibration_report.py`)
+- Additional protocol adapters
+- End-to-end integration tests
+- GitHub Actions CI
+- Automated documentation generation
+
+---
+
+# Development Tools
+
+This project uses:
+
+- pandas
+- SQLAlchemy
+- Google Drive API
+- pytest
+- black
+- ruff
+
+---
+
+# License
+
+Internal project developed for the PlantMap3D analytics pipeline.

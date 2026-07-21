@@ -38,3 +38,4 @@ notebooks/
 
 # Tests
 #tests/
+print_tree.py
